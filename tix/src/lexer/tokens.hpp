@@ -20,8 +20,9 @@ namespace lexer {
     struct Token {
         TokenType type;
         std::string value;
-        context::Context context;
+        context::Context ctx;
         
-        Token(const context::Context context, const TokenType type, const std::string value);
+        Token();
+        Token(const context::Context ctx, const TokenType type, const std::string value);
     };
 }

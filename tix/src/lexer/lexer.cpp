@@ -61,7 +61,9 @@ namespace lexer {
             this->advance();
         }
 
-        this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, this->pos), TokenType::EndOfFile, "EOF"));
+        context::Position position_start = this->pos.copy();
+        this->advance();
+        this->tokens.push_back(Token(context::Context(ctx_ess, position_start, this->pos), TokenType::EndOfFile, "EOF"));
     }
 
     void Lexer::advance() {

@@ -3,8 +3,10 @@
 #include "nodes.hpp"
 #include "expr.hpp"
 #include "stmt.hpp"
+#include "../context/positions.hpp"
 #include <vector>
 #include <utility>
+#include <iterator>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
@@ -27,10 +29,12 @@ namespace parser {
         this->errors = errors;
     }
 
-    Parser::Parser(const std::vector<lexer::Token> tokens) {
+    Parser::Parser(const std::string fn, const std::string src, const std::vector<lexer::Token> tokens) {
+        this->fn = fn;
+        this->src = src;
         this->tokens = tokens;
         this->errors.clear();
-        this->block = new BlockStatement(this->tokens[0].ctx);
+        this->block = new BlockStatement(context::Context(this->fn, this->src, this->tokens[0].ctx.start, (*std::prev(this->tokens.end())).ctx.end));
         this->idx = -1;
         this->advance();
     }
@@ -156,4 +160,5 @@ namespace parser {
         }
         }
     }
+
 }

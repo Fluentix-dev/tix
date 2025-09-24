@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../context/positions.hpp"
+#include <memory>
 
 namespace parser {
     enum struct NodeType {

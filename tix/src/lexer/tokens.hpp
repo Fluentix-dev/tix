@@ -14,7 +14,8 @@ namespace lexer {
         Mult,
         Div,
         LParen,
-        RParen
+        RParen,
+        Semi
     };
 
     struct Token {

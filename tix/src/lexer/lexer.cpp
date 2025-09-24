@@ -18,7 +18,8 @@ namespace lexer {
             {'*', TokenType::Mult},
             {'/', TokenType::Div},
             {'(', TokenType::LParen},
-            {')', TokenType::RParen}
+            {')', TokenType::RParen},
+            {';', TokenType::Semi}
         };
 
         this->idx = -1;

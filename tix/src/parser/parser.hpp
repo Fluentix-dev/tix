@@ -4,17 +4,18 @@
 #include "../lexer/tokens.hpp"
 #include "../errors/error_handler.hpp"
 #include <vector>
+#include <memory>
 
 namespace parser {
     struct ParseResult {
-        Statement* result;
+        std::shared_ptr<Statement> result;
         std::vector<errors::Error> errors;
 
-        ParseResult(Statement* result, const std::vector<errors::Error> errors);
+        ParseResult(std::shared_ptr<Statement> result, const std::vector<errors::Error> errors);
     };
 
     struct Parser {
-        BlockStatement* block;
+        std::shared_ptr<BlockStatement> block;
         std::string fn;
         std::string src;
         std::vector<errors::Error> errors;
@@ -28,6 +29,7 @@ namespace parser {
 
         void advance();
         bool overflow();
+        ParseResult eol();
 
         // Parser essentials
         ParseResult statement();

@@ -7,12 +7,14 @@
 #include <vector>
 #include <utility>
 #include <iterator>
+#include <memory>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
 #define tc this->current_tok.ctx
 
 #define EOF lexer::TokenType::EndOfFile
+#define Semi lexer::TokenType::Semi
 #define Plus lexer::TokenType::Plus
 #define Minus lexer::TokenType::Minus
 #define Mult lexer::TokenType::Mult
@@ -24,7 +26,7 @@
 #define multiplicative !this->overflow() && (tt == Mult || tt == Div)
 
 namespace parser {
-    ParseResult::ParseResult(Statement* result, const std::vector<errors::Error> errors) {
+    ParseResult::ParseResult(std::shared_ptr<Statement> result, const std::vector<errors::Error> errors) {
         this->result = result; // this will turn nullptr if an error occurs
         this->errors = errors;
     }
@@ -34,7 +36,7 @@ namespace parser {
         this->src = src;
         this->tokens = tokens;
         this->errors.clear();
-        this->block = new BlockStatement(context::Context(this->fn, this->src, this->tokens[0].ctx.start, (*std::prev(this->tokens.end())).ctx.end));
+        this->block = std::make_shared<BlockStatement>(BlockStatement(context::Context(this->fn, this->src, this->tokens[0].ctx.start, (*std::prev(this->tokens.end())).ctx.end)));
         this->idx = -1;
         this->advance();
     }
@@ -48,6 +50,12 @@ namespace parser {
 
     bool Parser::overflow() {
         return (this->idx >= this->tokens.size());
+    }
+
+    ParseResult Parser::eol() {
+        if (tt != Semi) {
+            return ParseResult(nullptr, {errors::SyntaxError(tc, "expected semicolon")});
+        }
     }
 
     void Parser::parse() {
@@ -87,7 +95,7 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = new BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
             if (rhs.result) {
                 lhs.result->ctx.end = rhs.result->ctx.end;
             } else {
@@ -113,7 +121,7 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = new BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
             if (rhs.result) {
                 lhs.result->ctx.end = rhs.result->ctx.end;
             } else {
@@ -130,7 +138,7 @@ namespace parser {
             this->advance();
 
             ParseResult pr = this->unary_expression();
-            ParseResult returned = ParseResult(new UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, pr.result->ctx.end), op.value, static_cast<Expression*>(pr.result)), pr.errors);
+            ParseResult returned = ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, pr.result->ctx.end), op.value, std::static_pointer_cast<Expression>(pr.result))), pr.errors);
             if (pr.result) {
                 op.ctx.end = pr.result->ctx.end;
             }
@@ -144,12 +152,12 @@ namespace parser {
     ParseResult Parser::primary_expression() {
         switch (tt) {
         case Int: {
-            ParseResult returned = ParseResult(new IntExpression(tc, std::stoll(tv)), {});
+            ParseResult returned = ParseResult(std::make_shared<IntExpression>(IntExpression(tc, std::stoll(tv))), {});
             this->advance();
             return returned;
         }
         case Double: {
-            ParseResult returned = ParseResult(new DoubleExpression(tc, std::stod(tv)), {});
+            ParseResult returned = ParseResult(std::make_shared<DoubleExpression>(DoubleExpression(tc, std::stod(tv))), {});
             this->advance();
             return returned;
         }
@@ -162,4 +170,3 @@ namespace parser {
     }
 
 }
-

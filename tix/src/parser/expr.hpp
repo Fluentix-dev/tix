@@ -3,21 +3,22 @@
 #include "nodes.hpp"
 #include "../context/positions.hpp"
 #include <string>
+#include <memory>
 
 namespace parser {
     struct BinaryExpression : public Expression {
-        Expression* lhs;
+        std::shared_ptr<Expression> lhs;
         std::string op;
-        Expression* rhs;
+        std::shared_ptr<Expression> rhs;
 
-        BinaryExpression(const context::Context ctx, Expression* lhs, const std::string op, Expression* rhs);
+        BinaryExpression(const context::Context ctx, std::shared_ptr<Expression> lhs, const std::string op, std::shared_ptr<Expression> rhs);
     };
 
     struct UnaryExpression : public Expression {
         std::string sign;
-        Expression* value;
+        std::shared_ptr<Expression> value;
 
-        UnaryExpression(const context::Context ctx, const std::string sign, Expression* value);
+        UnaryExpression(const context::Context ctx, const std::string sign, std::shared_ptr<Expression> value);
     };
 
     struct IntExpression : public Expression {

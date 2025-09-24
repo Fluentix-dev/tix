@@ -87,7 +87,7 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = new BinaryExpression(lhs.result->ctx, static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
+            lhs.result = new BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
             if (rhs.result) {
                 lhs.result->ctx.end = rhs.result->ctx.end;
             } else {
@@ -113,7 +113,7 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = new BinaryExpression(lhs.result->ctx, static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
+            lhs.result = new BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), static_cast<Expression*>(lhs.result), op.value, static_cast<Expression*>(rhs.result));
             if (rhs.result) {
                 lhs.result->ctx.end = rhs.result->ctx.end;
             } else {
@@ -130,7 +130,7 @@ namespace parser {
             this->advance();
 
             ParseResult pr = this->unary_expression();
-            ParseResult returned = ParseResult(new UnaryExpression(op.ctx, op.value, static_cast<Expression*>(pr.result)), pr.errors);
+            ParseResult returned = ParseResult(new UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, pr.result->ctx.end), op.value, static_cast<Expression*>(pr.result)), pr.errors);
             if (pr.result) {
                 op.ctx.end = pr.result->ctx.end;
             }
@@ -162,3 +162,4 @@ namespace parser {
     }
 
 }
+

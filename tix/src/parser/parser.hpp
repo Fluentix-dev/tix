@@ -15,9 +15,11 @@ namespace parser {
 
     struct Parser {
         BlockStatement* block;
+        std::string fn;
+        std::string src;
         std::vector<errors::Error> errors;
 
-        Parser(const std::vector<lexer::Token> tokens);
+        Parser(const std::string fn, const std::string src, const std::vector<lexer::Token> tokens);
         void parse();
     private:
         std::vector<lexer::Token> tokens;
@@ -35,4 +37,5 @@ namespace parser {
         ParseResult unary_expression();
         ParseResult primary_expression();
     };
+
 }

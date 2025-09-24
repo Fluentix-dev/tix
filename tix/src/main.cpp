@@ -89,7 +89,7 @@ int main() {
         return 0;
     }
 
-    parser::Parser parse = parser::Parser(lex.tokens);
+    parser::Parser parse = parser::Parser("main.tx", real, lex.tokens);
     parse.parse();
 
     if (!parse.errors.empty()) {
@@ -104,4 +104,5 @@ int main() {
 
     debug_stmt(0, parse.block);
     return 0;
+
 }

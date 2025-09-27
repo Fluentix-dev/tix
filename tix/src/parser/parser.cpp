@@ -8,6 +8,7 @@
 #include <utility>
 #include <iterator>
 #include <memory>
+#include <string>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
@@ -19,6 +20,8 @@
 #define Minus lexer::TokenType::Minus
 #define Mult lexer::TokenType::Mult
 #define Div lexer::TokenType::Div
+#define LParen lexer::TokenType::LParen
+#define RParen lexer::TokenType::RParen
 #define Int lexer::TokenType::Int
 #define Double lexer::TokenType::Double
 
@@ -56,6 +59,16 @@ namespace parser {
         if (tt != Semi) {
             return ParseResult(nullptr, {errors::SyntaxError(tc, "expected semicolon")});
         }
+
+        return ParseResult(nullptr, {});
+    }
+
+    ParseResult Parser::expect(const lexer::TokenType expected, const std::string error_msg) {
+        if (tt != expected) {
+            return ParseResult(nullptr, {errors::SyntaxError(tc, error_msg)});
+        }
+        
+        return ParseResult(nullptr, {});
     }
 
     void Parser::parse() {
@@ -69,6 +82,13 @@ namespace parser {
             if (pr.result == nullptr) {
                 this->advance();
             }
+
+            pr = this->eol();
+            for (const errors::Error &err : pr.errors) {
+                this->errors.push_back(err);
+            }
+
+            this->advance();
         }
     }
 
@@ -151,6 +171,17 @@ namespace parser {
 
     ParseResult Parser::primary_expression() {
         switch (tt) {
+        case LParen: {
+            this->advance();
+            ParseResult expr = this->expression();
+            ParseResult pr = this->expect(RParen, "expected ')'");
+            if (!pr.errors.empty()) {
+                return pr;
+            }
+
+            this->advance();
+            return expr;
+        }
         case Int: {
             ParseResult returned = ParseResult(std::make_shared<IntExpression>(IntExpression(tc, std::stoll(tv))), {});
             this->advance();

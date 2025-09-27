@@ -5,6 +5,7 @@
 #include "../errors/error_handler.hpp"
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace parser {
     struct ParseResult {
@@ -30,6 +31,7 @@ namespace parser {
         void advance();
         bool overflow();
         ParseResult eol();
+        ParseResult expect(const lexer::TokenType expected, const std::string error_msg);
 
         // Parser essentials
         ParseResult statement();

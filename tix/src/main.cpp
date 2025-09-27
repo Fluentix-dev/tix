@@ -4,6 +4,7 @@
 #include "parser/nodes.hpp"
 #include "parser/stmt.hpp"
 #include "parser/expr.hpp"
+#include "interpreter/interpreter/interpreter.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -102,7 +103,13 @@ int main() {
         return 0;
     }
 
-    debug_stmt(0, parse.block);
-    return 0;
+    interpreter::Interpreter interpret = interpreter::Interpreter(parse.block);
+    interpret.run();
+    if (interpret.error != nullptr) {
+        errors::print_error(*interpret.error);
+        std::cout << "\n";
+        return 0;
+    }
 
+    return 0;
 }

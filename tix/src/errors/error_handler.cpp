@@ -20,6 +20,24 @@ namespace errors {
         this->context = context;
     }
 
+    TypeError::TypeError(const context::Context context, const std::string details) {
+        this->error_type = "Type Error";
+        this->details = details;
+        this->context = context;
+    }
+
+    MathError::MathError(const context::Context context, const std::string details) {
+        this->error_type = "Math Error";
+        this->details = details;
+        this->context = context;
+    }
+
+    InterpreterError::InterpreterError(const context::Context context, const std::string details) {
+        this->error_type = "Interpreter Error";
+        this->details = details;
+        this->context = context;
+    }
+
     void print_error(const Error error) {
         if (start_line == end_line) {
             std::cout << start_line << " || " << lines[start_line-1] << "\n";

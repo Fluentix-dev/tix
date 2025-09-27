@@ -4,7 +4,6 @@
 #include "../../errors/error_handler.hpp"
 #include "../../parser/expr.hpp"
 #include <memory>
-#include <iomanip>
 
 #define BlockStmt parser::NodeType::BlockStmt
 #define BinaryExpr parser::NodeType::BinaryExpr
@@ -36,7 +35,7 @@ namespace interpreter {
                 if (res.result->data_type == "int") {
                     std::cout << std::static_pointer_cast<Int>(res.result)->value << "\n";
                 } else if (res.result->data_type == "double") {
-                    std::cout << std::fixed << std::setprecision(15) << std::static_pointer_cast<Double>(res.result)->value << "\n";
+                    std::cout << std::static_pointer_cast<Double>(res.result)->value << "\n";
                 }
             }
 

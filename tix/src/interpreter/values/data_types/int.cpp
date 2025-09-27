@@ -67,7 +67,7 @@ namespace interpreter {
                 return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(new_ctx, "division by 0")));
             }
 
-            return RuntimeResult(std::make_shared<Int>(new_ctx, this->value / rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value / (double)rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {

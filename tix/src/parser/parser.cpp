@@ -20,13 +20,14 @@
 #define Minus lexer::TokenType::Minus
 #define Mult lexer::TokenType::Mult
 #define Div lexer::TokenType::Div
+#define Mod lexer::TokenType::Mod
 #define LParen lexer::TokenType::LParen
 #define RParen lexer::TokenType::RParen
 #define Int lexer::TokenType::Int
 #define Double lexer::TokenType::Double
 
 #define additive !this->overflow() && (tt == Plus || tt == Minus)
-#define multiplicative !this->overflow() && (tt == Mult || tt == Div)
+#define multiplicative !this->overflow() && (tt == Mult || tt == Div || tt == Mod)
 
 namespace parser {
     ParseResult::ParseResult(std::shared_ptr<Statement> result, const std::vector<errors::Error> errors) {

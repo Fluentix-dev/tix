@@ -68,6 +68,7 @@ int main() {
         std::cout << "File main.tx cannot be found!\n";
         return 0;
     }
+
     std::stringstream code;
     std::string line;
     while (src.is_open() && std::getline(src, line)) {
@@ -75,7 +76,9 @@ int main() {
     }
 
     std::string real = code.str();
-    real.erase(std::prev(real.end())); // Remove the ending newline
+    if (real.size() > 0) {
+        real.erase(std::prev(real.end())); // Remove the ending newline
+    }
 
     lexer::Lexer lex = lexer::Lexer("main.tx", real);
     lex.tokenize();

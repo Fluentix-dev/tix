@@ -73,6 +73,11 @@ namespace interpreter {
                 return res;
             }
 
+            if (binary->op == "%") {
+                RuntimeResult res = lhs.result->mod(rhs.result);
+                return res;
+            }
+
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(binary->ctx, "unsupported operand '" + binary->op + "'")));
         }
         case IntExpr:

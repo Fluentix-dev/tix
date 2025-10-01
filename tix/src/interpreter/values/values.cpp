@@ -28,6 +28,12 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "Cannot perform division on '" + this->data_type + "' and '" + other->data_type + "'")));
     }
 
+    RuntimeResult RuntimeValue::mod(const std::shared_ptr<RuntimeValue> other) {
+        context::Context new_ctx = this->ctx;
+        new_ctx.end = other->ctx.end;
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "Cannot perform modulo on '" + this->data_type + "' and '" + other->data_type + "'")));
+    }
+
     RuntimeResult::RuntimeResult(const std::shared_ptr<RuntimeValue> result, const std::shared_ptr<errors::Error> error) {
         this->result = result;
         this->error = error;

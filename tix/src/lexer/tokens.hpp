@@ -13,6 +13,7 @@ namespace lexer {
         Minus,
         Mult,
         Div,
+        Mod,
         LParen,
         RParen,
         Semi

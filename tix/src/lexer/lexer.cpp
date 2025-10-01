@@ -19,6 +19,7 @@ namespace lexer {
             {'/', TokenType::Div},
             {'(', TokenType::LParen},
             {')', TokenType::RParen},
+            {'%', TokenType::Mod},
             {';', TokenType::Semi}
         };
 

@@ -168,12 +168,14 @@ namespace parser {
             this->advance();
 
             ParseResult pr = this->unary_expression();
-            ParseResult returned = ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, pr.result->ctx.end), op.value, std::static_pointer_cast<Expression>(pr.result))), pr.errors);
+            context::Position end;
             if (pr.errors.empty()) {
-                returned.result->ctx.end = pr.result->ctx.end;
+                end = pr.result->ctx.end;
             } else {
-                returned.result->ctx.end = op.ctx.end;
+                end = op.ctx.end;
             }
+
+            ParseResult returned = ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, end), op.value, std::static_pointer_cast<Expression>(pr.result))), pr.errors);
 
             return returned;
         }

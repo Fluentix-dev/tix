@@ -9,6 +9,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <iostream>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
@@ -74,6 +75,10 @@ namespace parser {
 
     void Parser::parse() {
         while (!this->overflow() && tt != EOF) {
+            while (!this->overflow() && tt == Semi) {
+                this->advance();
+            }
+
             ParseResult pr = this->statement();
             this->block->body.push_back(pr.result);
             for (const errors::Error &err : pr.errors) {
@@ -116,12 +121,14 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
-            if (rhs.result) {
-                lhs.result->ctx.end = rhs.result->ctx.end;
+            context::Position end;
+            if (rhs.errors.empty()) {
+                end = rhs.result->ctx.end;
             } else {
-                lhs.result->ctx.end = op.ctx.end;
+                end = op.ctx.end;
             }
+
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
         }
 
         return lhs;
@@ -142,12 +149,14 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
-            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, rhs.result->ctx.end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
-            if (rhs.result) {
-                lhs.result->ctx.end = rhs.result->ctx.end;
+            context::Position end;
+            if (rhs.errors.empty()) {
+                end = rhs.result->ctx.end;
             } else {
-                lhs.result->ctx.end = op.ctx.end;
+                end = op.ctx.end;
             }
+
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
         }
 
         return lhs;
@@ -160,8 +169,10 @@ namespace parser {
 
             ParseResult pr = this->unary_expression();
             ParseResult returned = ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, pr.result->ctx.end), op.value, std::static_pointer_cast<Expression>(pr.result))), pr.errors);
-            if (pr.result) {
-                op.ctx.end = pr.result->ctx.end;
+            if (pr.errors.empty()) {
+                returned.result->ctx.end = pr.result->ctx.end;
+            } else {
+                returned.result->ctx.end = op.ctx.end;
             }
 
             return returned;
@@ -176,11 +187,11 @@ namespace parser {
             this->advance();
             ParseResult expr = this->expression();
             ParseResult pr = this->expect(RParen, "expected ')'");
+            this->advance();
             if (!pr.errors.empty()) {
                 return pr;
             }
 
-            this->advance();
             return expr;
         }
         case Int: {
@@ -200,5 +211,4 @@ namespace parser {
         }
         }
     }
-
 }

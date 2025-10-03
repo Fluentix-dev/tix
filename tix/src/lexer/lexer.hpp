@@ -25,6 +25,7 @@ namespace lexer {
 
         void advance();
         bool overflow();
+        char peek();
 
         Token build_number();
     };

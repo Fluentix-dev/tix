@@ -14,6 +14,7 @@ namespace lexer {
         Mult,
         Div,
         Mod,
+        Percent,
         LParen,
         RParen,
         Semi

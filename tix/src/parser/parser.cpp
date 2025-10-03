@@ -22,6 +22,7 @@
 #define Mult lexer::TokenType::Mult
 #define Div lexer::TokenType::Div
 #define Mod lexer::TokenType::Mod
+#define Percent lexer::TokenType::Percent
 #define LParen lexer::TokenType::LParen
 #define RParen lexer::TokenType::RParen
 #define Int lexer::TokenType::Int
@@ -180,7 +181,14 @@ namespace parser {
             return returned;
         }
 
-        return this->primary_expression();
+        ParseResult pr = this->primary_expression();
+        if (tt == Percent) {
+            lexer::Token op = this->current_tok;
+            this->advance();
+            return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, pr.result->ctx.start, op.ctx.end), "%", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
+        }
+
+        return pr;
     }
 
     ParseResult Parser::primary_expression() {

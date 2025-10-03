@@ -59,26 +59,43 @@ namespace interpreter {
             }
 
             if (binary->op == "-") {
-                RuntimeResult res = lhs.result->subtract(rhs.result);
-                return res;
+                return lhs.result->subtract(rhs.result);
             }
 
             if (binary->op == "*") {
-                RuntimeResult res = lhs.result->multiply(rhs.result);
-                return res;
+                return lhs.result->multiply(rhs.result);
             }
 
             if (binary->op == "/") {
-                RuntimeResult res = lhs.result->divide(rhs.result);
-                return res;
+                return lhs.result->divide(rhs.result);
             }
 
             if (binary->op == "%") {
-                RuntimeResult res = lhs.result->mod(rhs.result);
-                return res;
+                return lhs.result->mod(rhs.result);
             }
 
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(binary->ctx, "unsupported operand '" + binary->op + "'")));
+        }
+        case UnaryExpr: {
+            std::shared_ptr<parser::UnaryExpression> unary = std::static_pointer_cast<parser::UnaryExpression>(stmt);
+            RuntimeResult value = this->evaluate(unary->value);
+            if (value.error != nullptr) {
+                return value;
+            }
+
+            if (unary->sign == "+") {
+                return value.result->unplus(unary->ctx);
+            }
+
+            if (unary->sign == "-") {
+                return value.result->negate(unary->ctx);
+            }
+
+            if (unary->sign == "%") {
+                return value.result->percent(unary->ctx);
+            }
+
+            return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->ctx, "unsupported operand '" + unary->sign + "'")));
         }
         case IntExpr:
             return RuntimeResult(std::make_shared<Int>(interpreter::Int(stmt->ctx, std::static_pointer_cast<parser::IntExpression>(stmt)->value)), nullptr);

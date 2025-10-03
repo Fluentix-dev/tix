@@ -18,6 +18,9 @@ namespace interpreter {
         virtual RuntimeResult multiply(const std::shared_ptr<RuntimeValue> other);
         virtual RuntimeResult divide(const std::shared_ptr<RuntimeValue> other);
         virtual RuntimeResult mod(const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult unplus(const context::Context sign_ctx);
+        virtual RuntimeResult negate(const context::Context sign_ctx);
+        virtual RuntimeResult percent(const context::Context sign_ctx);
     };
 
     struct RuntimeResult {
@@ -35,7 +38,10 @@ namespace interpreter {
         RuntimeResult subtract(const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult multiply(const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult divide(const std::shared_ptr<RuntimeValue> other) override;
-        RuntimeResult mod(const std::shared_ptr<RuntimeValue> other) override;        
+        RuntimeResult mod(const std::shared_ptr<RuntimeValue> other) override;  
+        RuntimeResult unplus(const context::Context sign_ctx) override;
+        RuntimeResult negate(const context::Context sign_ctx) override;
+        RuntimeResult percent(const context::Context sign_ctx) override;
     };
 
     struct Double : public RuntimeValue {
@@ -47,5 +53,8 @@ namespace interpreter {
         RuntimeResult multiply(const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult divide(const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult mod(const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult unplus(const context::Context sign_ctx) override;
+        RuntimeResult negate(const context::Context sign_ctx) override;
+        RuntimeResult percent(const context::Context sign_ctx) override;
     };
 }

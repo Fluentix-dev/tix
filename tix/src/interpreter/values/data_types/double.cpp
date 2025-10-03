@@ -106,4 +106,22 @@ namespace interpreter {
 
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform modulo on 'double' and '" + other->data_type + "'")));
     }
+
+    RuntimeResult Double::unplus(const context::Context sign_ctx) {
+        context::Context new_ctx = this->ctx;
+        new_ctx.start = sign_ctx.start;
+        return RuntimeResult(std::make_shared<Double>(new_ctx, this->value), nullptr);
+    }
+
+    RuntimeResult Double::negate(const context::Context sign_ctx) {
+        context::Context new_ctx = this->ctx;
+        new_ctx.start = sign_ctx.start;
+        return RuntimeResult(std::make_shared<Double>(new_ctx, -this->value), nullptr);
+    }
+
+    RuntimeResult Double::percent(const context::Context sign_ctx) {
+        context::Context new_ctx = this->ctx;
+        new_ctx.end = sign_ctx.end;
+        return RuntimeResult(std::make_shared<Double>(new_ctx, this->value / 100), nullptr);
+    }
 }

@@ -5,6 +5,8 @@
 #include <unordered_map>
 
 #define ctx_ess this->file_name, this->code 
+#define lower_parse_levels ('0' <= this->peek() && this->peek() <= '9') || ('A' <= this->peek() && this->peek() <= 'Z') || ('a' <= this->peek() && this->peek() <= 'z') || this->peek() == '('
+#define whitespaces !this->overflow() && (this->code[this->idx] == ' ' || this->code[this->idx] == '\t' || this->code[this->idx] == '\n')
 
 namespace lexer {
     Lexer::Lexer(const std::string file_name, const std::string code) {
@@ -19,7 +21,6 @@ namespace lexer {
             {'/', TokenType::Div},
             {'(', TokenType::LParen},
             {')', TokenType::RParen},
-            {'%', TokenType::Mod},
             {';', TokenType::Semi}
         };
 
@@ -31,7 +32,7 @@ namespace lexer {
 
     void Lexer::tokenize() {
         while (!this->overflow()) {
-            while (!this->overflow() && (this->current_char == ' ' || this->current_char == '\t' || this->current_char == '\n')) {
+            while (whitespaces) {
                 this->advance();
             }
 
@@ -44,6 +45,17 @@ namespace lexer {
                     this->advance();
                 }
 
+                continue;
+            }
+
+            if (this->current_char == '%') {
+                if (lower_parse_levels) {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Mod, "%"));
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Percent, "%"));
+                }
+
+                this->advance();
                 continue;
             }
 
@@ -86,6 +98,23 @@ namespace lexer {
 
     bool Lexer::overflow() {
         return (this->idx >= this->code.size());
+    }
+
+    char Lexer::peek() {
+        size_t save = this->idx;
+        this->idx++;
+        while (whitespaces) {
+            this->idx++;
+        }
+
+        if (this->overflow()) {
+            this->idx = save;
+            return '\0';
+        }
+
+        char returned = this->code[this->idx];
+        this->idx = save;
+        return returned;
     }
 
     Token Lexer::build_number() {

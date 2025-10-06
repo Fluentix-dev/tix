@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-#define ctx_ess this->file_name, this->code 
+#define ctx_ess this->file_name, this->code
 #define lower_parse_levels ('0' <= this->peek() && this->peek() <= '9') || ('A' <= this->peek() && this->peek() <= 'Z') || ('a' <= this->peek() && this->peek() <= 'z') || this->peek() == '('
 #define whitespaces !this->overflow() && (this->code[this->idx] == ' ' || this->code[this->idx] == '\t' || this->code[this->idx] == '\n')
 
@@ -21,7 +21,14 @@ namespace lexer {
             {'/', TokenType::Div},
             {'(', TokenType::LParen},
             {')', TokenType::RParen},
+            {'[', TokenType::LBrac},
+            {']', TokenType::RBrac},
+            {'=', TokenType::Equals},
             {';', TokenType::Semi}
+        };
+
+        this->keywords = {
+            {"const", TokenType::Const}
         };
 
         this->idx = -1;
@@ -61,6 +68,11 @@ namespace lexer {
 
             if (('0' <= this->current_char && this->current_char <= '9') || this->current_char == '.') {
                 this->tokens.push_back(this->build_number());
+                continue;
+            }
+
+            if (('A' <= this->current_char && this->current_char <= 'Z') || ('a' <= this->current_char && this->current_char <= 'z') || this->current_char == '_') {
+                this->tokens.push_back(this->build_ident());
                 continue;
             }
 
@@ -141,5 +153,21 @@ namespace lexer {
         }
 
         return Token(context::Context(this->file_name, this->code, position_start, this->pos), dot ? TokenType::Double : TokenType::Int, number);
+    }
+
+    Token Lexer::build_ident() {
+        std::string ident = "";
+        context::Position position_start = this->pos.copy();
+        while (!this->overflow() && (('A' <= this->current_char && this->current_char <= 'Z') || ('a' <= this->current_char && this->current_char <= 'z') || this->current_char == '_')) {
+            ident += this->current_char;
+            this->advance();
+        }
+
+        auto it = this->keywords.find(ident);
+        if (it == this->keywords.end()) {
+            return Token(context::Context(this->file_name, this->code, position_start, this->pos), TokenType::Ident, ident);
+        }
+
+        return Token(context::Context(this->file_name, this->code, position_start, this->pos), it->second, ident);
     }
 }

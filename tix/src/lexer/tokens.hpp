@@ -17,7 +17,13 @@ namespace lexer {
         Percent,
         LParen,
         RParen,
-        Semi
+        LBrac,
+        RBrac,
+        Equals,
+        Semi,
+
+        Ident,
+        Const
     };
 
     struct Token {

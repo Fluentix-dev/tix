@@ -27,5 +27,9 @@ namespace errors {
         InterpreterError(const context::Context context, const std::string details);
     };
 
+    struct ScopeError : public Error {
+        ScopeError(const context::Context context, const std::string details);
+    };
+
     void print_error(const Error error);
 }

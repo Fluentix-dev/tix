@@ -38,6 +38,12 @@ namespace errors {
         this->context = context;
     }
 
+    ScopeError::ScopeError(const context::Context context, const std::string details) {
+        this->error_type = "Scope Error";
+        this->details = details;
+        this->context = context;
+    }
+
     void print_error(const Error error) {
         if (start_line == end_line) {
             std::cout << start_line << " || " << lines[start_line-1] << "\n";

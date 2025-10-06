@@ -25,8 +25,13 @@
 #define Percent lexer::TokenType::Percent
 #define LParen lexer::TokenType::LParen
 #define RParen lexer::TokenType::RParen
+#define Equals lexer::TokenType::Equals
 #define Int lexer::TokenType::Int
 #define Double lexer::TokenType::Double
+#define Ident lexer::TokenType::Ident
+#define Const lexer::TokenType::Const
+#define LBrac lexer::TokenType::LBrac
+#define RBrac lexer::TokenType::RBrac
 
 #define additive !this->overflow() && (tt == Plus || tt == Minus)
 #define multiplicative !this->overflow() && (tt == Mult || tt == Div || tt == Mod)
@@ -100,19 +105,114 @@ namespace parser {
     }
 
     ParseResult Parser::statement() {
-        return this->expression();
+        switch (tt) {
+        case Const: {
+            lexer::Token const_tok = this->current_tok;
+            this->advance();
+
+            ParseResult data_type = this->expression();
+            ParseResult pr = this->expect(Ident, "expected variable name in constant variable declaration");
+            for (const errors::Error &err : pr.errors) {
+                data_type.errors.push_back(err);
+            }
+
+            if (!pr.errors.empty()) {
+                return data_type;
+            }
+
+            data_type = this->variable_declaration_statement(data_type);
+            std::shared_ptr<VariableDeclarationStatement> variable_declaration = std::static_pointer_cast<VariableDeclarationStatement>(data_type.result);
+            variable_declaration->constant = true;
+            variable_declaration->ctx.start = const_tok.ctx.start;
+
+            return ParseResult(variable_declaration, data_type.errors);
+        }
+        default: {
+            ParseResult pr = this->expression();
+            if (tt == Ident) {
+                return this->variable_declaration_statement(pr);
+            }
+
+            return pr;
+        }
+        }
+    }
+
+    ParseResult Parser::variable_declaration_statement(ParseResult data_type) {
+        lexer::Token variable = this->current_tok;
+        std::string var_name = tv;
+        this->advance();
+        ParseResult pr = this->expect(Equals, "expected '=' in variable declaration");
+
+        lexer::Token equals = this->current_tok;
+        this->advance();
+        ParseResult value = this->expression();
+        
+        context::Position start;
+        context::Position end;
+        if (data_type.errors.empty()) {
+            start = data_type.result->ctx.start;
+        } else {
+            start = variable.ctx.start;
+        }
+
+        if (value.errors.empty()) {
+            end = value.result->ctx.end;
+        } else {
+            end = equals.ctx.end;
+        }
+
+        for (const errors::Error &err : pr.errors) {
+            data_type.errors.push_back(err);
+        }
+
+        for (const errors::Error &err : value.errors) {
+            data_type.errors.push_back(err);
+        }
+
+        return ParseResult(std::make_shared<VariableDeclarationStatement>(VariableDeclarationStatement(context::Context(this->fn, this->src, start, end), false, std::static_pointer_cast<Expression>(data_type.result), var_name, std::static_pointer_cast<Expression>(value.result))), data_type.errors);
     }
 
     ParseResult Parser::expression() {
-        return this->additive_expression();
+        return this->assignment_expression();
+    }
+
+    ParseResult Parser::assignment_expression() {
+        ParseResult pr = this->additive_expression();
+        if (tt != Equals) {
+            return pr;
+        }
+
+        lexer::Token equals = this->current_tok;
+        this->advance();
+        ParseResult pr2 = this->assignment_expression();
+
+        context::Position start;
+        context::Position end;
+        if (pr.errors.empty()) {
+            start = pr.result->ctx.start;
+            if (pr.result->node_type != NodeType::IdentifierExpr) {
+                pr.errors.push_back(errors::SyntaxError(pr.result->ctx, "expected a variable inside assignment"));
+            }
+        } else {
+            start = equals.ctx.start;
+        }
+
+        if (pr2.errors.empty()) {
+            end = pr2.result->ctx.end;
+        } else {
+            end = equals.ctx.end;
+        }
+
+        for (const errors::Error &err : pr2.errors) {
+            pr.errors.push_back(err);
+        }
+
+        return ParseResult(std::make_shared<AssignmentExpression>(AssignmentExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(pr.result), std::static_pointer_cast<Expression>(pr2.result))), pr.errors);
     }
 
     ParseResult Parser::additive_expression() {
         ParseResult lhs = this->multiplicative_expression();
-        if (lhs.result == nullptr) {
-            return lhs;
-        }
-
         while (additive) {
             lexer::Token op = this->current_tok;
             this->advance();
@@ -122,14 +222,21 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
+            context::Position start;
             context::Position end;
+            if (lhs.errors.empty()) {
+                start = lhs.result->ctx.start;
+            } else {
+                start = op.ctx.start;
+            }
+
             if (rhs.errors.empty()) {
                 end = rhs.result->ctx.end;
             } else {
                 end = op.ctx.end;
             }
 
-            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
         }
 
         return lhs;
@@ -150,14 +257,21 @@ namespace parser {
                 lhs.errors.push_back(err);
             }
 
+            context::Position start;
             context::Position end;
+            if (lhs.errors.empty()) {
+                start = lhs.result->ctx.start;
+            } else {
+                start = op.ctx.start;
+            }
+
             if (rhs.errors.empty()) {
                 end = rhs.result->ctx.end;
             } else {
                 end = op.ctx.end;
             }
 
-            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, lhs.result->ctx.start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
         }
 
         return lhs;
@@ -177,7 +291,6 @@ namespace parser {
             }
 
             ParseResult returned = ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, op.ctx.start, end), op.value, std::static_pointer_cast<Expression>(pr.result))), pr.errors);
-
             return returned;
         }
 
@@ -185,7 +298,15 @@ namespace parser {
         if (tt == Percent) {
             lexer::Token op = this->current_tok;
             this->advance();
-            return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, pr.result->ctx.start, op.ctx.end), "%", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
+
+            context::Position start;
+            if (pr.errors.empty()) {
+                start = pr.result->ctx.start;
+            } else {
+                start = op.ctx.start;
+            }
+
+            return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, start, op.ctx.end), "%", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
         }
 
         return pr;
@@ -194,6 +315,7 @@ namespace parser {
     ParseResult Parser::primary_expression() {
         switch (tt) {
         case LParen: {
+            lexer::Token lparen = this->current_tok;
             this->advance();
             ParseResult expr = this->expression();
             ParseResult pr = this->expect(RParen, "expected ')'");
@@ -202,6 +324,9 @@ namespace parser {
                 return pr;
             }
 
+            lexer::Token rparen = this->current_tok;
+            expr.result->ctx.start = lparen.ctx.start;
+            expr.result->ctx.end = rparen.ctx.end;
             return expr;
         }
         case Int: {
@@ -214,11 +339,42 @@ namespace parser {
             this->advance();
             return returned;
         }
+        case Ident: {
+            return this->list_type_expression();
+        }
         default: {
             ParseResult returned = ParseResult(nullptr, {errors::SyntaxError(tc, "Invalid syntax!")});
             this->advance();
             return returned;
         }
         }
+    }
+
+    ParseResult Parser::list_type_expression() {
+        ParseResult returned = ParseResult(std::make_shared<IdentifierExpression>(IdentifierExpression(tc, tv)), {});
+        this->advance();
+        while (tt == LBrac) {
+            lexer::Token lbrac = this->current_tok;
+            this->advance();
+            // Expect a ']'
+            ParseResult pr = this->expect(RBrac, "expected ']'");
+            if (!pr.errors.empty()) {
+                return pr;
+            }
+
+            context::Position start;
+            if (returned.errors.empty()) {
+                start = returned.result->ctx.start;
+            } else {
+                start = lbrac.ctx.start;
+            }
+
+            returned = ParseResult(std::make_shared<ListTypeExpression>(ListTypeExpression(context::Context(this->fn, this->src, start, tc.end), std::static_pointer_cast<Expression>(returned.result))), pr.errors);
+            this->advance();
+
+            // Continue looping because there can be a matrix and so on,...
+        }
+
+        return returned;
     }
 }

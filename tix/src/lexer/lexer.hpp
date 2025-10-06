@@ -19,6 +19,7 @@ namespace lexer {
         std::string code;
 
         std::unordered_map<char, TokenType> single_char_token;
+        std::unordered_map<std::string, TokenType> keywords;
         size_t idx;
         context::Position pos;
         char current_char;
@@ -28,5 +29,6 @@ namespace lexer {
         char peek();
 
         Token build_number();
+        Token build_ident();
     };
 }

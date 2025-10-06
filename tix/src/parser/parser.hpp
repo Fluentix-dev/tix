@@ -12,7 +12,7 @@ namespace parser {
         std::shared_ptr<Statement> result;
         std::vector<errors::Error> errors;
 
-        ParseResult(std::shared_ptr<Statement> result, const std::vector<errors::Error> errors);
+        ParseResult(const std::shared_ptr<Statement> result, const std::vector<errors::Error> errors);
     };
 
     struct Parser {
@@ -36,10 +36,14 @@ namespace parser {
         // Parser essentials
         ParseResult statement();
         ParseResult expression();
+
+        ParseResult variable_declaration_statement(const ParseResult data_type);
+
+        ParseResult assignment_expression();
         ParseResult additive_expression();
         ParseResult multiplicative_expression();
         ParseResult unary_expression();
         ParseResult primary_expression();
+        ParseResult list_type_expression();
     };
-
 }

@@ -7,12 +7,16 @@ namespace parser {
     enum struct NodeType {
         // Stmts
         BlockStmt,
+        VariableDeclarationStmt,
 
         // Exprs
+        AssignmentExpr,
         BinaryExpr,
         UnaryExpr,
         IntExpr,
-        DoubleExpr
+        DoubleExpr,
+        IdentifierExpr,
+        ListTypeExpr,
     };
     
     struct Statement {

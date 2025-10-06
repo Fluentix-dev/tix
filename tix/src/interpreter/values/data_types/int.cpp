@@ -6,122 +6,106 @@
 
 namespace interpreter {
     Int::Int(const context::Context ctx, const long long value) {
-        this->data_type = "int";
         this->ctx = ctx;
+        this->data_type = "int";
         this->value = value;
     }
 
-    RuntimeResult Int::add(const std::shared_ptr<RuntimeValue> other) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = other->ctx.end;
+    RuntimeResult Int::add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
-            return RuntimeResult(std::make_shared<Int>(new_ctx, this->value + rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Int>(ctx, this->value + rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {
             std::shared_ptr<Double> rhs = std::dynamic_pointer_cast<Double>(other);
-            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value + rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, this->value + rhs->value), nullptr);
         }
 
-        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform addition on 'int' and '" + other->data_type + "'")));
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform addition on 'int' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Int::subtract(const std::shared_ptr<RuntimeValue> other) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = other->ctx.end;
+    RuntimeResult Int::subtract(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
-            return RuntimeResult(std::make_shared<Int>(new_ctx, this->value - rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Int>(ctx, this->value - rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {
             std::shared_ptr<Double> rhs = std::dynamic_pointer_cast<Double>(other);
-            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value - rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, this->value - rhs->value), nullptr);
         }
 
-        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform subtraction on 'int' and '" + other->data_type + "'")));
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform subtraction on 'int' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Int::multiply(const std::shared_ptr<RuntimeValue> other) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = other->ctx.end;
+    RuntimeResult Int::multiply(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
-            return RuntimeResult(std::make_shared<Int>(new_ctx, this->value * rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Int>(ctx, this->value * rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {
             std::shared_ptr<Double> rhs = std::dynamic_pointer_cast<Double>(other);
-            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value * rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, this->value * rhs->value), nullptr);
         }
 
-        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform multiplication on 'int' and '" + other->data_type + "'")));
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform multiplication on 'int' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Int::divide(const std::shared_ptr<RuntimeValue> other) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = other->ctx.end;
+    RuntimeResult Int::divide(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             if (rhs->value == 0) {
-                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(new_ctx, "division by 0")));
+                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(ctx, "division by 0")));
             }
 
-            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value / (double)rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, this->value / (double)rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {
             std::shared_ptr<Double> rhs = std::dynamic_pointer_cast<Double>(other);
             if (rhs->value == 0) {
-                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(new_ctx, "division by 0")));
+                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(ctx, "division by 0")));
             }
 
-            return RuntimeResult(std::make_shared<Double>(new_ctx, this->value / rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, this->value / rhs->value), nullptr);
         }
 
-        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform division on 'int' and '" + other->data_type + "'")));
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform division on 'int' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Int::mod(const std::shared_ptr<RuntimeValue> other) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = other->ctx.end;
+    RuntimeResult Int::mod(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             if (rhs->value == 0) {
-                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(new_ctx, "modulo by 0")));
+                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(ctx, "modulo by 0")));
             }
             
-            return RuntimeResult(std::make_shared<Int>(new_ctx, this->value % rhs->value), nullptr);
+            return RuntimeResult(std::make_shared<Int>(ctx, this->value % rhs->value), nullptr);
         }
 
         if (other->data_type == "double") {
             std::shared_ptr<Double> rhs = std::dynamic_pointer_cast<Double>(other);
             if (rhs->value == 0) {
-                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(new_ctx, "modulo by 0")));
+                return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(ctx, "modulo by 0")));
             }
 
-            return RuntimeResult(std::make_shared<Double>(new_ctx, std::fmod(this->value, rhs->value)), nullptr);
+            return RuntimeResult(std::make_shared<Double>(ctx, std::fmod(this->value, rhs->value)), nullptr);
         }
 
-        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(new_ctx, "cannot perform modulo on 'int' and '" + other->data_type + "'")));
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform modulo on 'int' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Int::unplus(const context::Context sign_ctx) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.start = sign_ctx.start;
-        return RuntimeResult(std::make_shared<Int>(new_ctx, this->value), nullptr);
+    RuntimeResult Int::unplus(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Int>(ctx, this->value), nullptr);
     }
 
-    RuntimeResult Int::negate(const context::Context sign_ctx) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.start = sign_ctx.start;
-        return RuntimeResult(std::make_shared<Int>(new_ctx, -this->value), nullptr);
+    RuntimeResult Int::negate(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Int>(ctx, -this->value), nullptr);
     }
 
-    RuntimeResult Int::percent(const context::Context sign_ctx) {
-        context::Context new_ctx = this->ctx;
-        new_ctx.end = sign_ctx.end;
-        return RuntimeResult(std::make_shared<Double>(new_ctx, this->value / 100.0), nullptr);
+    RuntimeResult Int::percent(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Double>(ctx, this->value / 100.0), nullptr);
     }
 }

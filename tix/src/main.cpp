@@ -5,6 +5,8 @@
 #include "parser/stmt.hpp"
 #include "parser/expr.hpp"
 #include "interpreter/interpreter/interpreter.hpp"
+#include "interpreter/values/scopes.hpp"
+#include "interpreter/values/values.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -25,6 +27,7 @@ void debug_expr(std::shared_ptr<parser::Expression> expr) {
         break;
     case parser::NodeType::UnaryExpr: {
         std::shared_ptr<parser::UnaryExpression> unary = std::static_pointer_cast<parser::UnaryExpression>(expr);
+        std::cout << "that's actually real\n";
         std::cout << "(" << unary->sign;
         debug_expr(unary->value);
         std::cout << ")";
@@ -35,6 +38,9 @@ void debug_expr(std::shared_ptr<parser::Expression> expr) {
         break;
     case parser::NodeType::DoubleExpr:
         std::cout << "(" << std::static_pointer_cast<parser::DoubleExpression>(expr)->value << ")";
+        break;
+    case parser::NodeType::IdentifierExpr:
+        std::cout << "(" << std::static_pointer_cast<parser::IdentifierExpression>(expr)->var_name << ")";
         break;
     default:
         std::cout << "This AST node has not been supported for debugging: " << static_cast<int>(expr->node_type);
@@ -53,8 +59,17 @@ void debug_stmt(const size_t indentation, std::shared_ptr<parser::Statement> stm
         for (const std::shared_ptr<parser::Statement> &stmt : block->body) {
             debug_stmt(indentation+1, stmt);
         }
-    }
+        
         break;
+    }
+    case parser::NodeType::VariableDeclarationStmt: {
+        std::shared_ptr<parser::VariableDeclarationStatement> variable_declaration = std::static_pointer_cast<parser::VariableDeclarationStatement>(stmt);
+        debug_expr(variable_declaration->data_type);
+        std::cout << " " << variable_declaration->var_name << " = ";
+        debug_expr(variable_declaration->value);
+
+        break;
+    }
     default:
         debug_expr(std::static_pointer_cast<parser::Expression>(stmt));
     }
@@ -62,10 +77,15 @@ void debug_stmt(const size_t indentation, std::shared_ptr<parser::Statement> stm
     std::cout << "\n";
 }
 
-int main() {
-    std::ifstream src("files/main.tx");
+int main(int argc, char* argv[]) {
+    std::string fn = "";
+    for (int i = 1; i < argc; i++) {
+        fn += argv[i];
+    }
+
+    std::ifstream src(fn);
     if (!src) {
-        std::cout << "File main.tx cannot be found!\n";
+        std::cout << "File " << fn << " cannot be found!\n";
         return 0;
     }
 
@@ -80,7 +100,17 @@ int main() {
         real.erase(std::prev(real.end())); // Remove the ending newline
     }
 
-    lexer::Lexer lex = lexer::Lexer("main.tx", real);
+    std::shared_ptr<interpreter::Scope> global_scope = std::make_shared<interpreter::Scope>(interpreter::Scope(nullptr));
+    context::Context dummy_ctx = context::Context(fn, real, context::Position(0, 0), context::Position(0, 0));
+
+    // Definitions starts from here
+    global_scope->declare(dummy_ctx, true, "type", "int", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "int", {
+        {"double", true}
+    })));
+    global_scope->declare(dummy_ctx, true, "type", "double", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "double", {})));
+    // and ends here
+
+    lexer::Lexer lex = lexer::Lexer("files/main.tx", real);
     lex.tokenize();
 
     if (!lex.errors.empty()) {
@@ -106,7 +136,8 @@ int main() {
         return 0;
     }
 
-    interpreter::Interpreter interpret = interpreter::Interpreter(parse.block);
+    // debug_stmt(0, parse.block);
+    interpreter::Interpreter interpret = interpreter::Interpreter(global_scope, parse.block);
     interpret.run();
     if (interpret.error != nullptr) {
         errors::print_error(*interpret.error);

@@ -6,6 +6,13 @@
 #include <memory>
 
 namespace parser {
+    struct AssignmentExpression : public Expression {
+        std::shared_ptr<Expression> assigner;
+        std::shared_ptr<Expression> assignee;
+
+        AssignmentExpression(const context::Context ctx, std::shared_ptr<Expression> assigner, const std::shared_ptr<Expression> assignee);
+    };
+
     struct BinaryExpression : public Expression {
         std::shared_ptr<Expression> lhs;
         std::string op;
@@ -31,5 +38,17 @@ namespace parser {
         double value;
 
         DoubleExpression(const context::Context ctx, const double value);
+    };
+
+    struct IdentifierExpression : public Expression {
+        std::string var_name;
+
+        IdentifierExpression(const context::Context ctx, const std::string var_name);
+    };
+
+    struct ListTypeExpression : public Expression {
+        std::shared_ptr<Expression> parent;
+
+        ListTypeExpression(const context::Context ctx, const std::shared_ptr<Expression>);
     };
 }

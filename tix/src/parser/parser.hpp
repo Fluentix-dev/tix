@@ -43,7 +43,10 @@ namespace parser {
         ParseResult additive_expression();
         ParseResult multiplicative_expression();
         ParseResult unary_expression();
+        ParseResult call_expression();
+        ParseResult member_expression();
         ParseResult primary_expression();
         ParseResult list_type_expression();
+        ParseResult get_expression();
     };
 }

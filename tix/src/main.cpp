@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iterator>
 #include <memory>
+#include <vector>
 
 void debug_expr(std::shared_ptr<parser::Expression> expr) {
     switch (expr->node_type) {
@@ -23,24 +24,51 @@ void debug_expr(std::shared_ptr<parser::Expression> expr) {
         std::cout << " " << binary->op << " ";
         debug_expr(binary->rhs);
         std::cout << ")";
-    }
         break;
+    }
     case parser::NodeType::UnaryExpr: {
         std::shared_ptr<parser::UnaryExpression> unary = std::static_pointer_cast<parser::UnaryExpression>(expr);
-        std::cout << "that's actually real\n";
         std::cout << "(" << unary->sign;
         debug_expr(unary->value);
         std::cout << ")";
-    }
         break;
+    }
+    case parser::NodeType::CallExpr: {
+        std::shared_ptr<parser::CallExpression> call = std::static_pointer_cast<parser::CallExpression>(expr);
+        std::cout << "(";
+        debug_expr(call->callee);
+        std::cout << "(";
+        for (size_t i = 0; i < call->arguments.size(); i++) {
+            debug_expr(call->arguments[i]);
+            if (i < call->arguments.size()-1) {
+                std::cout << ", ";
+            }
+        }
+
+        std::cout << "))";
+        break;
+    }
+    case parser::NodeType::MemberExpr: {
+        std::shared_ptr<parser::MemberExpression> member = std::static_pointer_cast<parser::MemberExpression>(expr);
+        std::cout << "(";
+        debug_expr(member->parent);
+        std::cout << "." << member->member << ")";
+        break;
+    }
     case parser::NodeType::IntExpr:
         std::cout << "(" << std::static_pointer_cast<parser::IntExpression>(expr)->value << ")";
         break;
     case parser::NodeType::DoubleExpr:
         std::cout << "(" << std::static_pointer_cast<parser::DoubleExpression>(expr)->value << ")";
         break;
+    case parser::NodeType::StringExpr:
+        std::cout << "(" << std::static_pointer_cast<parser::StringExpression>(expr)->value << ")";
+        break;
     case parser::NodeType::IdentifierExpr:
         std::cout << "(" << std::static_pointer_cast<parser::IdentifierExpression>(expr)->var_name << ")";
+        break;
+    case parser::NodeType::GetExpr:
+        std::cout << "(GET \"" << std::static_pointer_cast<parser::GetExpression>(expr)->module_name << "\")";
         break;
     default:
         std::cout << "This AST node has not been supported for debugging: " << static_cast<int>(expr->node_type);
@@ -108,6 +136,17 @@ int main(int argc, char* argv[]) {
         {"double", true}
     })));
     global_scope->declare(dummy_ctx, true, "type", "double", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "double", {})));
+    global_scope->declare(dummy_ctx, true, "type", "function", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "function", {})));
+    global_scope->declare(dummy_ctx, true, "type", "builtin_func", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "builtin_func", {
+        {"function", true}
+    })));
+    global_scope->declare(dummy_ctx, true, "type", "module", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "module", {})));
+    global_scope->declare(dummy_ctx, true, "type", "null_type", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "null_type", {})));
+    global_scope->declare(dummy_ctx, true, "type", "string", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "string", {})));
+
+    // Constants
+    global_scope->declare(dummy_ctx, true, "null_type", "null", std::make_shared<interpreter::Null>(dummy_ctx));
+
     // and ends here
 
     lexer::Lexer lex = lexer::Lexer("files/main.tx", real);
@@ -136,7 +175,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // debug_stmt(0, parse.block);
+    //debug_stmt(0, parse.block);
     interpreter::Interpreter interpret = interpreter::Interpreter(global_scope, parse.block);
     interpret.run();
     if (interpret.error != nullptr) {

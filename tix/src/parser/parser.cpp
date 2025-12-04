@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <utility>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
@@ -26,10 +27,14 @@
 #define LParen lexer::TokenType::LParen
 #define RParen lexer::TokenType::RParen
 #define Equals lexer::TokenType::Equals
+#define Comma lexer::TokenType::Comma
+#define Dot lexer::TokenType::Dot
 #define Int lexer::TokenType::Int
 #define Double lexer::TokenType::Double
+#define String lexer::TokenType::String
 #define Ident lexer::TokenType::Ident
 #define Const lexer::TokenType::Const
+#define Get lexer::TokenType::Get
 #define LBrac lexer::TokenType::LBrac
 #define RBrac lexer::TokenType::RBrac
 
@@ -37,6 +42,94 @@
 #define multiplicative !this->overflow() && (tt == Mult || tt == Div || tt == Mod)
 
 namespace parser {
+    std::pair<std::string, std::string> encode_string(const std::string original) {
+        std::string new_str = "";
+        size_t string_idx = 0;
+        while (string_idx < original.size()) {
+            if (original[string_idx] == '\\') {
+                char escaped_char = original[++string_idx];
+                string_idx++;
+                switch (escaped_char) {
+                case '\'':
+                    new_str += "'";
+                    break;
+                case '"':
+                    new_str += '"';
+                    break;
+                case '\\':
+                    new_str += "\\";
+                    break;
+                case 'n':
+                    new_str += "\n";
+                    break;
+                case 'r':
+                    new_str += "\r";
+                    break;
+                case 't':
+                    new_str += "\t";
+                    break;
+                case 'b':
+                    new_str += "\b";
+                    break;
+                case 'f':
+                    new_str += "\f";
+                    break;
+                case 'v':
+                    new_str += "\v";
+                    break;
+                case '0':
+                    new_str += '\0';
+                    break;
+                case 'a':
+                    new_str += "\a";
+                    break;
+                case 'x': {
+                    if (string_idx+1 >= original.size()) {
+                        return {"", "unicode escape \\x can't be decoded because of invalid syntax"};
+                    }
+
+                    char first = original[string_idx++];
+                    char second = original[string_idx++];
+                    if (!(('0' <= first && first <= '9') || ('a' <= first && first <= 'f') || ('A' <= first && first <= 'F'))) {
+                        return {"", "unicode escape \\x can't be decoded because of invalid syntax"};
+                    }
+
+                    if (!(('0' <= second && second <= '9') || ('a' <= second && second <= 'f') || ('A' <= second && second <= 'F'))) {
+                        return {"", "unicode escape \\x can't be decoded because of invalid syntax"};
+                    }
+
+                    size_t ascii_val;
+                    if ('0' <= first && first <= '9') {
+                        ascii_val = (first - '0')*16;
+                    } else if ('a' <= first && first <= 'f') {
+                        ascii_val = (first - 'a' + 11)*16;
+                    } else {
+                        ascii_val = (first - 'A' + 11)*16;
+                    }
+
+                    if ('0' <= second && second <= '9') {
+                        ascii_val += second - '0';
+                    } else if ('a' <= second && second <= 'f') {
+                        ascii_val += second - 'a' + 11;
+                    } else {
+                        ascii_val += second - 'A' + 11;
+                    }
+
+                    char new_char = (char)ascii_val;
+                    new_str += new_char;
+                    break;
+                }
+                default:
+                    return {"", "unexpected character after '\\'"};
+                }
+            } else {
+                new_str += original[string_idx++];
+            }
+        }
+
+        return {new_str, ""};
+    }
+
     ParseResult::ParseResult(std::shared_ptr<Statement> result, const std::vector<errors::Error> errors) {
         this->result = result; // this will turn nullptr if an error occurs
         this->errors = errors;
@@ -294,7 +387,7 @@ namespace parser {
             return returned;
         }
 
-        ParseResult pr = this->primary_expression();
+        ParseResult pr = this->call_expression();
         if (tt == Percent) {
             lexer::Token op = this->current_tok;
             this->advance();
@@ -312,6 +405,64 @@ namespace parser {
         return pr;
     }
 
+    ParseResult Parser::call_expression() {
+        ParseResult callee = this->member_expression();
+        if (tt != LParen) {
+            return callee;
+        }
+
+        this->advance();
+        std::vector<std::shared_ptr<Expression>> arguments = {};
+        std::vector<errors::Error> errors = {};
+        while (true) {
+            if (tt == RParen) {
+                break;
+            }
+
+            ParseResult arg = this->expression();
+            arguments.push_back(std::static_pointer_cast<Expression>(arg.result));
+            for (const errors::Error &err : arg.errors) {
+                errors.push_back(err);
+            }
+
+            if (tt == RParen) {
+                break;
+            }
+
+            ParseResult pr = this->expect(Comma, "expected ',' to seperate the arguments");
+            for (const errors::Error &err : pr.errors) {
+                errors.push_back(err);
+            }
+
+            this->advance();
+        }
+
+        lexer::Token rparen = this->current_tok;
+        this->advance();
+        return ParseResult(std::make_shared<CallExpression>(CallExpression(context::Context(this->fn, this->src, callee.result->ctx.start, rparen.ctx.end), std::static_pointer_cast<Expression>(callee.result), arguments)), errors);
+    }
+
+    ParseResult Parser::member_expression() {
+        ParseResult parent = this->primary_expression();
+        while (tt == Dot) {
+            this->advance();
+            ParseResult pr = this->expect(Ident, "expected variable name for attribute accessing");
+            for (const errors::Error &err : pr.errors) {
+                parent.errors.push_back(err);
+            }
+
+            if (pr.errors.empty()) {
+                parent.result = std::make_shared<MemberExpression>(MemberExpression(context::Context(this->fn, this->src, parent.result->ctx.start, tc.end), std::static_pointer_cast<Expression>(parent.result), tv));
+            } else {
+                parent.result = std::make_shared<MemberExpression>(MemberExpression(parent.result->ctx, std::static_pointer_cast<Expression>(parent.result), ""));
+            }
+
+            this->advance();
+        }
+
+        return parent;
+    }
+
     ParseResult Parser::primary_expression() {
         switch (tt) {
         case LParen: {
@@ -319,11 +470,15 @@ namespace parser {
             this->advance();
             ParseResult expr = this->expression();
             ParseResult pr = this->expect(RParen, "expected ')'");
-            this->advance();
-            if (!pr.errors.empty()) {
-                return pr;
+            for (const errors::Error &err : pr.errors) {
+                expr.errors.push_back(err);
             }
 
+            if (!pr.errors.empty()) {
+                return expr;
+            }
+
+            this->advance();
             lexer::Token rparen = this->current_tok;
             expr.result->ctx.start = lparen.ctx.start;
             expr.result->ctx.end = rparen.ctx.end;
@@ -339,8 +494,20 @@ namespace parser {
             this->advance();
             return returned;
         }
-        case Ident: {
+        case String: {
+            std::pair<std::string, std::string> result = encode_string(tv);
+            if (result.second != "") {
+                return ParseResult(nullptr, {errors::SyntaxError(tc, result.second)});
+            }
+
+            ParseResult returned = ParseResult(std::make_shared<StringExpression>(StringExpression(tc, result.first)), {});
+            this->advance();
+            return returned;
+        }
+        case Ident:
             return this->list_type_expression();
+        case Get: {
+            return this->get_expression();
         }
         default: {
             ParseResult returned = ParseResult(nullptr, {errors::SyntaxError(tc, "Invalid syntax!")});
@@ -376,5 +543,21 @@ namespace parser {
         }
 
         return returned;
+    }
+
+    ParseResult Parser::get_expression() {
+        context::Position start = tc.start;
+        this->advance();
+
+        ParseResult pr = this->expect(String, "expected a string literal in get expressions");
+        if (!pr.errors.empty()) {
+            return pr;
+        }
+
+        context::Position end = tc.end;
+        std::shared_ptr<GetExpression> returned = std::make_shared<GetExpression>(GetExpression(context::Context(this->fn, this->src, start, end), tv));
+        this->advance();
+
+        return ParseResult(returned, {});
     }
 }

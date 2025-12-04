@@ -10,4 +10,8 @@ namespace interpreter {
         this->type = type;
         this->inheritence = inheritence;
     }
+
+    RuntimeResult Type::repr(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<String>(String(ctx, "<type '" + this->type + "'>")), nullptr);
+    }
 }

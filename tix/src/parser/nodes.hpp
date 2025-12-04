@@ -13,10 +13,14 @@ namespace parser {
         AssignmentExpr,
         BinaryExpr,
         UnaryExpr,
+        CallExpr,
+        MemberExpr,
         IntExpr,
         DoubleExpr,
+        StringExpr,
         IdentifierExpr,
         ListTypeExpr,
+        GetExpr
     };
     
     struct Statement {

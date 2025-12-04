@@ -7,6 +7,7 @@
 #define ctx_ess this->file_name, this->code
 #define lower_parse_levels ('0' <= this->peek() && this->peek() <= '9') || ('A' <= this->peek() && this->peek() <= 'Z') || ('a' <= this->peek() && this->peek() <= 'z') || this->peek() == '('
 #define whitespaces !this->overflow() && (this->code[this->idx] == ' ' || this->code[this->idx] == '\t' || this->code[this->idx] == '\n')
+#define number_dot !(('A' <= this->past() && this->past() <= 'Z') || ('a' <= this->past() && this->past() <= 'z'))
 
 namespace lexer {
     Lexer::Lexer(const std::string file_name, const std::string code) {
@@ -24,11 +25,13 @@ namespace lexer {
             {'[', TokenType::LBrac},
             {']', TokenType::RBrac},
             {'=', TokenType::Equals},
-            {';', TokenType::Semi}
+            {';', TokenType::Semi},
+            {',', TokenType::Comma}
         };
 
         this->keywords = {
-            {"const", TokenType::Const}
+            {"const", TokenType::Const},
+            {"get", TokenType::Get}
         };
 
         this->idx = -1;
@@ -66,7 +69,23 @@ namespace lexer {
                 continue;
             }
 
-            if (('0' <= this->current_char && this->current_char <= '9') || this->current_char == '.') {
+            if (this->current_char == '.') {
+                if (number_dot) {
+                    this->tokens.push_back(this->build_number());
+                    continue;
+                }
+
+                this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Dot, "."));
+                this->advance();
+                continue;
+            }
+
+            if (this->current_char == '"') {
+                this->tokens.push_back(this->build_string());
+                continue;
+            }
+
+            if (('0' <= this->current_char && this->current_char <= '9')) {
                 this->tokens.push_back(this->build_number());
                 continue;
             }
@@ -129,6 +148,14 @@ namespace lexer {
         return returned;
     }
 
+    char Lexer::past() {
+        if (this->idx == 0) {
+            return ' ';
+        }
+
+        return this->code[this->idx-1];
+    }
+
     Token Lexer::build_number() {
         std::string number = "";
         bool dot = false;
@@ -148,11 +175,11 @@ namespace lexer {
         }
 
         if (number == ".") {
-            this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, position_start, this->pos), "standalone decimal point '.'"));
-            return Token(context::Context(this->file_name, this->code, position_start, this->pos), TokenType::EndOfFile, "");
+            this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, position_start, this->pos.copy()), "standalone decimal point '.'"));
+            return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::EndOfFile, "");
         }
 
-        return Token(context::Context(this->file_name, this->code, position_start, this->pos), dot ? TokenType::Double : TokenType::Int, number);
+        return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), dot ? TokenType::Double : TokenType::Int, number);
     }
 
     Token Lexer::build_ident() {
@@ -165,9 +192,40 @@ namespace lexer {
 
         auto it = this->keywords.find(ident);
         if (it == this->keywords.end()) {
-            return Token(context::Context(this->file_name, this->code, position_start, this->pos), TokenType::Ident, ident);
+            return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::Ident, ident);
         }
 
-        return Token(context::Context(this->file_name, this->code, position_start, this->pos), it->second, ident);
+        return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), it->second, ident);
+    }
+
+    Token Lexer::build_string() {
+        std::string string = "";
+        context::Position position_start = this->pos.copy();
+        this->advance();
+        while (!this->overflow() && this->current_char != '"') {
+            if (this->current_char == '\\') {
+                string += "\\";
+                this->advance();
+                if (this->overflow()) {
+                    break;
+                }
+            }
+
+            if (this->current_char == '\n') {
+                string += "\\n";
+            } else {
+                string += this->current_char;
+            }
+            
+            this->advance();
+        }
+
+        if (this->overflow()) {
+            this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, position_start, this->pos.copy()), "unclosed string"));
+            return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::EndOfFile, "");
+        }
+
+        this->advance();
+        return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::String, string);
     }
 }

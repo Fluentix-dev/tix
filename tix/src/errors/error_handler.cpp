@@ -44,6 +44,18 @@ namespace errors {
         this->context = context;
     }
 
+    AttributeError::AttributeError(const context::Context context, const std::string details) {
+        this->error_type = "Attribute Error";
+        this->details = details;
+        this->context = context;
+    }
+
+    ModuleError::ModuleError(const context::Context context, const std::string details) {
+        this->error_type = "Module Error";
+        this->details = details;
+        this->context = context;
+    }
+
     void print_error(const Error error) {
         if (start_line == end_line) {
             std::cout << start_line << " || " << lines[start_line-1] << "\n";

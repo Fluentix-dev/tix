@@ -6,6 +6,8 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <functional>
+#include <vector>
 
 namespace interpreter {
     struct RuntimeValue;
@@ -23,6 +25,9 @@ namespace interpreter {
         virtual RuntimeResult unplus(const context::Context ctx);
         virtual RuntimeResult negate(const context::Context ctx);
         virtual RuntimeResult percent(const context::Context ctx);
+        virtual RuntimeResult repr(const context::Context ctx);
+        virtual RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args);
+        virtual RuntimeResult access(const context::Context ctx, const std::string attr);
     };
 
     struct RuntimeResult {
@@ -46,6 +51,7 @@ namespace interpreter {
         RuntimeResult unplus(const context::Context ctx) override;
         RuntimeResult negate(const context::Context ctx) override;
         RuntimeResult percent(const context::Context ctx) override;
+        RuntimeResult repr(const context::Context ctx) override;
     };
 
     struct Double : public RuntimeValue {
@@ -60,12 +66,42 @@ namespace interpreter {
         RuntimeResult unplus(const context::Context ctx) override;
         RuntimeResult negate(const context::Context ctx) override;
         RuntimeResult percent(const context::Context ctx) override;
+        RuntimeResult repr(const context::Context ctx) override;
     };
 
     struct Type : public RuntimeValue {
         std::string type;
         std::unordered_map<std::string, bool> inheritence;
-
         Type(const context::Context ctx, const std::string type, const std::unordered_map<std::string, bool> inheritence);
+        
+        RuntimeResult repr(const context::Context ctx) override;
+    };
+
+    struct Null : public RuntimeValue {
+        Null(const context::Context ctx);
+
+        RuntimeResult repr(const context::Context ctx) override;
+    };
+
+    struct String : public RuntimeValue {
+        std::string value;
+        String(const context::Context ctx, const std::string value);
+
+        RuntimeResult add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult repr(const context::Context ctx) override;
+    };
+
+    struct BuiltInFunction : public RuntimeValue {
+        std::function<RuntimeResult(std::vector<std::shared_ptr<RuntimeValue>>)> fn;
+        BuiltInFunction(const context::Context ctx, const std::function<RuntimeResult(std::vector<std::shared_ptr<RuntimeValue>>)> fn);
+
+        RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args) override;
+    };
+
+    struct Module : public RuntimeValue {
+        std::unordered_map<std::string, std::shared_ptr<RuntimeValue>> vars;
+
+        Module(const context::Context ctx, const std::unordered_map<std::string, std::shared_ptr<RuntimeValue>> vars);
+        RuntimeResult access(const context::Context ctx, const std::string attr);
     };
 }

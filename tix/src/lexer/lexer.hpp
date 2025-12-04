@@ -27,8 +27,10 @@ namespace lexer {
         void advance();
         bool overflow();
         char peek();
+        char past();
 
         Token build_number();
         Token build_ident();
+        Token build_string();
     };
 }

@@ -3,6 +3,7 @@
 #include "../../../errors/error_handler.hpp"
 #include <memory>
 #include <cmath>
+#include <string>
 
 namespace interpreter {
     Double::Double(const context::Context ctx, const double value) {
@@ -107,5 +108,9 @@ namespace interpreter {
 
     RuntimeResult Double::percent(const context::Context ctx) {
         return RuntimeResult(std::make_shared<Double>(ctx, this->value / 100), nullptr);
+    }
+
+    RuntimeResult Double::repr(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<String>(String(ctx, std::to_string(value))), nullptr);
     }
 }

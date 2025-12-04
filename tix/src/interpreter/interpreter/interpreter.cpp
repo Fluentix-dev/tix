@@ -12,9 +12,13 @@
 #define AssignmentExpr parser::NodeType::AssignmentExpr
 #define BinaryExpr parser::NodeType::BinaryExpr
 #define UnaryExpr parser::NodeType::UnaryExpr
+#define CallExpr parser::NodeType::CallExpr
+#define MemberExpr parser::NodeType::MemberExpr
 #define IdentifierExpr parser::NodeType::IdentifierExpr
 #define IntExpr parser::NodeType::IntExpr
 #define DoubleExpr parser::NodeType::DoubleExpr
+#define StringExpr parser::NodeType::StringExpr
+#define GetExpr parser::NodeType::GetExpr
 
 namespace interpreter {
     Interpreter::Interpreter(const std::shared_ptr<Scope> scope, const std::shared_ptr<parser::BlockStatement> ast) {
@@ -40,12 +44,6 @@ namespace interpreter {
                 
                 if (res.result == nullptr) {
                     continue;
-                }
-
-                if (res.result->data_type == "int") {
-                    std::cout << std::static_pointer_cast<Int>(res.result)->value << "\n";
-                } else if (res.result->data_type == "double") {
-                    std::cout << std::static_pointer_cast<Double>(res.result)->value << "\n";
                 }
             }
 
@@ -140,12 +138,104 @@ namespace interpreter {
 
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->ctx, "unsupported operand '" + unary->sign + "'")));
         }
+        case CallExpr: {
+            std::shared_ptr<parser::CallExpression> call = std::static_pointer_cast<parser::CallExpression>(stmt);
+            RuntimeResult callee = this->evaluate(scope, call->callee);
+            if (callee.error != nullptr) {
+                return callee;
+            }
+
+            std::vector<std::shared_ptr<RuntimeValue>> args = {};
+            for (const std::shared_ptr<parser::Expression> &arg : call->arguments) {
+                RuntimeResult argument = this->evaluate(scope, arg);
+                if (argument.error != nullptr) {
+                    return argument;
+                }
+
+                args.push_back(argument.result);
+            }
+
+            return callee.result->call(call->ctx, args);
+        }
+        case MemberExpr: {
+            std::shared_ptr<parser::MemberExpression> member = std::static_pointer_cast<parser::MemberExpression>(stmt);
+            RuntimeResult parent = this->evaluate(scope, member->parent);
+            if (parent.error != nullptr) {
+                return parent;
+            }
+
+            return parent.result->access(member->ctx, member->member);
+        }
         case IdentifierExpr:
             return scope->get(stmt->ctx, std::static_pointer_cast<parser::IdentifierExpression>(stmt)->var_name);
         case IntExpr:
-            return RuntimeResult(std::make_shared<Int>(interpreter::Int(stmt->ctx, std::static_pointer_cast<parser::IntExpression>(stmt)->value)), nullptr);
+            return RuntimeResult(std::make_shared<Int>(Int(stmt->ctx, std::static_pointer_cast<parser::IntExpression>(stmt)->value)), nullptr);
         case DoubleExpr:
-            return RuntimeResult(std::make_shared<Double>(interpreter::Double(stmt->ctx, std::static_pointer_cast<parser::DoubleExpression>(stmt)->value)), nullptr);
+            return RuntimeResult(std::make_shared<Double>(Double(stmt->ctx, std::static_pointer_cast<parser::DoubleExpression>(stmt)->value)), nullptr);
+        case StringExpr:
+            return RuntimeResult(std::make_shared<String>(String(stmt->ctx, std::static_pointer_cast<parser::StringExpression>(stmt)->value)), nullptr);
+        case GetExpr: {
+            std::shared_ptr<parser::GetExpression> get = std::static_pointer_cast<parser::GetExpression>(stmt);
+            std::string module_name = get->module_name;
+            if (module_name == "io") {
+                context::Context ctx = get->ctx;
+                return RuntimeResult(std::make_shared<Module>(Module(ctx, {
+                    {"log", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        for (const std::shared_ptr<RuntimeValue> &arg : args) {
+                            RuntimeResult str_repr = arg->repr(arg->ctx);
+                            if (str_repr.error != nullptr) {
+                                return str_repr;
+                            }
+                
+                            if (str_repr.result->data_type != "string") {
+                                return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(arg->ctx, "repr of a value must be a string")));
+                            }
+                
+                            std::cout << std::static_pointer_cast<String>(str_repr.result)->value;
+                        }
+                
+                        return scope->get(ctx, "null");
+                    }))},
+                    {"logln", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        for (const std::shared_ptr<RuntimeValue> &arg : args) {
+                            RuntimeResult str_repr = arg->repr(arg->ctx);
+                            if (str_repr.error != nullptr) {
+                                return str_repr;
+                            }
+                
+                            if (str_repr.result->data_type != "string") {
+                                return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(arg->ctx, "repr of a value must be a string")));
+                            }
+                
+                            std::cout << std::static_pointer_cast<String>(str_repr.result)->value;
+                        }
+                
+                        std::cout << "\n";
+                        return scope->get(ctx, "null");
+                    }))},
+                    {"prompt", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        for (const std::shared_ptr<RuntimeValue> &arg : args) {
+                            RuntimeResult str_repr = arg->repr(arg->ctx);
+                            if (str_repr.error != nullptr) {
+                                return str_repr;
+                            }
+                
+                            if (str_repr.result->data_type != "string") {
+                                return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(arg->ctx, "repr of a value must be a string")));
+                            }
+                
+                            std::cout << std::static_pointer_cast<String>(str_repr.result)->value;
+                        }
+                
+                        std::string returned;
+                        std::getline(std::cin, returned);
+                        return RuntimeResult(std::make_shared<String>(String(ctx, returned)), nullptr);
+                    }))}
+                })), nullptr);
+            }
+            
+            return RuntimeResult(nullptr, std::make_shared<errors::ModuleError>(errors::ModuleError(stmt->ctx, "module '" + get->module_name + "' does not exist")));
+        }
         default:
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(stmt->ctx, "unsupported node type: " + std::to_string(static_cast<int>(stmt->node_type)))));
         }

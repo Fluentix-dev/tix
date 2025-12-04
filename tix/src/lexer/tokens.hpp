@@ -9,6 +9,7 @@ namespace lexer {
         EndOfFile,
         Int,
         Double,
+        String,
         Plus,
         Minus,
         Mult,
@@ -21,9 +22,12 @@ namespace lexer {
         RBrac,
         Equals,
         Semi,
+        Comma,
+        Dot,
 
         Ident,
-        Const
+        Const,
+        Get
     };
 
     struct Token {

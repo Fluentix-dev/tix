@@ -1,2 +1,4 @@
-const int something = 67;
-something = 56;
+const module io = get "io";
+
+string name = io.prompt("What's your name? ");
+io.logln("Your name is: " + name);

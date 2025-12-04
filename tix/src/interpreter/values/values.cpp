@@ -3,6 +3,7 @@
 #include "../../context/positions.hpp"
 #include "scopes.hpp"
 #include <memory>
+#include <vector>
 
 namespace interpreter {
     RuntimeResult RuntimeValue::add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
@@ -35,6 +36,18 @@ namespace interpreter {
 
     RuntimeResult RuntimeValue::percent(const context::Context ctx) {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform percentage on '" + this->data_type + "'")));
+    }
+
+    RuntimeResult RuntimeValue::repr(const context::Context ctx) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform repr on '" + this->data_type + "'")));
+    }
+
+    RuntimeResult RuntimeValue::call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform call on '" + this->data_type + "'")));
+    }
+
+    RuntimeResult RuntimeValue::access(const context::Context ctx, const std::string attr) {
+        return RuntimeResult(nullptr, std::make_shared<errors::AttributeError>(errors::AttributeError(ctx, "'" + this->data_type + "' has no attribute '" + attr + "'")));
     }
 
     RuntimeResult::RuntimeResult(const std::shared_ptr<RuntimeValue> result, const std::shared_ptr<errors::Error> error) {

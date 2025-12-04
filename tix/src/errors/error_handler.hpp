@@ -31,5 +31,13 @@ namespace errors {
         ScopeError(const context::Context context, const std::string details);
     };
 
+    struct AttributeError : public Error {
+        AttributeError(const context::Context context, const std::string details);
+    };
+
+    struct ModuleError : public Error {
+        ModuleError(const context::Context context, const std::string details);
+    };
+
     void print_error(const Error error);
 }

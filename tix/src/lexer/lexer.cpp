@@ -7,7 +7,7 @@
 #define ctx_ess this->file_name, this->code
 #define lower_parse_levels ('0' <= this->peek() && this->peek() <= '9') || ('A' <= this->peek() && this->peek() <= 'Z') || ('a' <= this->peek() && this->peek() <= 'z') || this->peek() == '('
 #define whitespaces !this->overflow() && (this->code[this->idx] == ' ' || this->code[this->idx] == '\t' || this->code[this->idx] == '\n')
-#define number_dot !(('A' <= this->past() && this->past() <= 'Z') || ('a' <= this->past() && this->past() <= 'z'))
+#define number_dot this->past() == '(' || this->past() == '[' || this->past() == '{' || this->past() == ',' || this->past() == '+' || this->past() == '-' || this->past() == '*' || this->past() == '/'
 
 namespace lexer {
     Lexer::Lexer(const std::string file_name, const std::string code) {
@@ -228,4 +228,5 @@ namespace lexer {
         this->advance();
         return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::String, string);
     }
+
 }

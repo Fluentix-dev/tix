@@ -20,14 +20,24 @@ namespace lexer {
         RParen,
         LBrac,
         RBrac,
+        LCurl,
+        RCurl,
         Equals,
         Semi,
         Comma,
         Dot,
+        EqualComp,
+        NotEquals,
+        Greater,
+        Smaller,
+        GreaterOrEquals,
+        SmallerOrEquals,
 
         Ident,
         Const,
-        Get
+        Get,
+        If,
+        Else
     };
 
     struct Token {

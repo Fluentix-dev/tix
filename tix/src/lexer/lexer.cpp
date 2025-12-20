@@ -24,14 +24,17 @@ namespace lexer {
             {')', TokenType::RParen},
             {'[', TokenType::LBrac},
             {']', TokenType::RBrac},
-            {'=', TokenType::Equals},
+            {'{', TokenType::LCurl},
+            {'}', TokenType::RCurl},
             {';', TokenType::Semi},
             {',', TokenType::Comma}
         };
 
         this->keywords = {
             {"const", TokenType::Const},
-            {"get", TokenType::Get}
+            {"get", TokenType::Get},
+            {"if", TokenType::If},
+            {"else", TokenType::Else}
         };
 
         this->idx = -1;
@@ -71,12 +74,65 @@ namespace lexer {
 
             if (this->current_char == '.') {
                 if (number_dot) {
+                    std::cout << this->past() << " ";
                     this->tokens.push_back(this->build_number());
                     continue;
                 }
 
                 this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Dot, "."));
                 this->advance();
+                continue;
+            }
+
+            if (this->current_char == '=') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::EqualComp, "=="));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Equals, "="));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '!') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::NotEquals, "!="));
+                    this->advance();
+                } else {
+                    this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, pos_start, this->pos), "invalid character '!'"));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '>') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::GreaterOrEquals, ">="));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Greater, ">"));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '<') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::SmallerOrEquals, "<="));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Smaller, "<"));
+                }
+
                 continue;
             }
 
@@ -228,5 +284,4 @@ namespace lexer {
         this->advance();
         return Token(context::Context(this->file_name, this->code, position_start, this->pos.copy()), TokenType::String, string);
     }
-
 }

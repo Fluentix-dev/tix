@@ -1,5 +1,6 @@
 #include "error_handler.hpp"
 #include <cmath>
+#include <iostream>
 
 #define start_line error.context.start.line
 #define end_line error.context.end.line
@@ -56,6 +57,12 @@ namespace errors {
         this->context = context;
     }
 
+    ArgumentError::ArgumentError(const context::Context context, const std::string details) {
+        this->error_type = "Argument Error";
+        this->details = details;
+        this->context = context;
+    }
+
     void print_error(const Error error) {
         if (start_line == end_line) {
             std::cout << start_line << " || " << lines[start_line-1] << "\n";
@@ -75,44 +82,42 @@ namespace errors {
 
         size_t max_digits = std::log(end_line) / std::log(10) + 1;
         for (size_t i = start_line; i <= end_line; i++) {
+            // step 1: print the line no.
             size_t digits = std::log(i) / std::log(10) + 1;
-
-            for (size_t j = digits; j < max_digits; j++) {
-                std::cout << "0";
+            for (size_t i = 0; i < max_digits-digits; i++) {
+                std::cout << 0;
             }
 
             std::cout << i << " || " << lines[i-1] << "\n";
             
-            for (size_t j = 0; j < max_digits + 4; j++) {
+            // step 2: print the offset
+            for (size_t i = 0; i < max_digits + 4; i++) {
                 std::cout << " ";
             }
 
+            // step 3: print the pointer
             if (i == start_line) {
+                // print from start pos to end line
                 for (size_t j = 1; j < start_col; j++) {
                     std::cout << " ";
                 }
 
-                for (size_t j = start_col; j <= lines[i].size(); j++) {
+                for (size_t j = start_col; j <= lines[i-1].size(); j++) {
                     std::cout << "^";
                 }
-
-                std::cout << "\n";
-                continue;
-            }
-
-            if (i == end_line) {
-                for (size_t j = 1; j <= end_col; j++) {
+            } else if (i == end_line) {
+                // print from start line to end pos
+                for (size_t j = 1; j < end_col; j++) {
                     std::cout << "^";
                 }
-
-                std::cout << "\n";
-                break;
+            } else {
+                // print the whole line
+                for (const char c : lines[i-1]) {
+                    std::cout << "^";
+                }
             }
 
-            for (size_t j = 0; j < lines[i].size(); j++) {
-                std::cout << "^";
-            }
-
+            // step 4: end it with a newline
             std::cout << "\n";
         }
 

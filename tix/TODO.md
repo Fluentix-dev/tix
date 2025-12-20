@@ -1,11 +1,18 @@
+# Error formatting
+[X] Fix multi-line
+
 # Parser
 [X] List init: type[]
 [ ] {arg1, arg2, arg3,...} defines a list
-[ ] If else: if cond { ... } else if cond { ... } else { ... }
-[ ] Get expressions: used to import modules (const io = get "io";)
+[X] If else: if cond { ... } else if cond { ... } else { ... }
+[X] Parse inner block
+[X] Get expressions: used to import modules (const io = get "io";)
 [X] Member expressions
 [X] String literal
 [X] Add all escape characters
+[X] Comparison operators
+[ ] && || !
+[ ] For and while loop
 
 # Interpreter
 [ ] Add support for operator overridding for custom and built-in data types
@@ -18,4 +25,16 @@
 [ ] Every function returns null by default if not returning, but not matching the type means error
 [X] Call expressions
 [X] Strings
-[ ] Get expressions
+[X] Get expressions
+[X] If else (you must remember to add new SCOPES)
+[X] Booleans (true/false)
+[X] Comparison operators
+[ ] && || ! by truthy and falsy + short-circuit
+[ ] For and while loop (add scoping)
+[ ] math module
+
+# Compiling
+[ ] Remove unused variables
+[ ] Inline small functions
+[ ] Loop unrolling
+[ ] Constant folding (3 + 4 → 7)

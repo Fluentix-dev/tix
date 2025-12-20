@@ -1,4 +1,10 @@
 const module io = get "io";
 
-string name = io.prompt("What's your name? ");
-io.logln("Your name is: " + name);
+int a = 5;
+if 5 == 5 {
+    io.logln(a);
+    int a = 6;
+    io.logln(a);
+}
+
+io.logln(a);

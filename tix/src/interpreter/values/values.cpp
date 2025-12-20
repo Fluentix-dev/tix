@@ -38,6 +38,30 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform percentage on '" + this->data_type + "'")));
     }
 
+    RuntimeResult RuntimeValue::equals(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform equals comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+
+    RuntimeResult RuntimeValue::not_equals(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform not equals comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+
+    RuntimeResult RuntimeValue::greater_than(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform greater than comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+
+    RuntimeResult RuntimeValue::smaller_than(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform smaller than comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+    
+    RuntimeResult RuntimeValue::greater_than_or_equals(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform greater than or equals comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+
+    RuntimeResult RuntimeValue::smaller_than_or_equals(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform smaller than or equals comparison on '" + this->data_type + "' and '" + other->data_type)));
+    }
+
     RuntimeResult RuntimeValue::repr(const context::Context ctx) {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform repr on '" + this->data_type + "'")));
     }

@@ -98,6 +98,19 @@ void debug_stmt(const size_t indentation, std::shared_ptr<parser::Statement> stm
 
         break;
     }
+    case parser::NodeType::IfElseStmt: {
+        std::shared_ptr<parser::IfElseStatement> if_else = std::static_pointer_cast<parser::IfElseStatement>(stmt);
+        std::cout << "IF ";
+        debug_expr(if_else->condition);
+        std::cout << " THEN PERFORM\n";
+        debug_stmt(indentation+1, if_else->body);
+        if (if_else->next != nullptr) {
+            std::cout << "\nELSE ";
+            debug_stmt(indentation, if_else->next);
+        }
+
+        break;
+    }
     default:
         debug_expr(std::static_pointer_cast<parser::Expression>(stmt));
     }
@@ -143,9 +156,15 @@ int main(int argc, char* argv[]) {
     global_scope->declare(dummy_ctx, true, "type", "module", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "module", {})));
     global_scope->declare(dummy_ctx, true, "type", "null_type", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "null_type", {})));
     global_scope->declare(dummy_ctx, true, "type", "string", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "string", {})));
+    global_scope->declare(dummy_ctx, true, "type", "boolean", std::make_shared<interpreter::Type>(interpreter::Type(dummy_ctx, "boolean", {
+        {"double", true},
+        {"int", true}
+    })));
 
     // Constants
     global_scope->declare(dummy_ctx, true, "null_type", "null", std::make_shared<interpreter::Null>(dummy_ctx));
+    global_scope->declare(dummy_ctx, true, "boolean", "true", std::make_shared<interpreter::Boolean>(dummy_ctx, true));
+    global_scope->declare(dummy_ctx, true, "boolean", "false", std::make_shared<interpreter::Boolean>(dummy_ctx, false));
 
     // and ends here
 

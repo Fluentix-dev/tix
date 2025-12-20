@@ -17,4 +17,12 @@ namespace parser {
         this->var_name = var_name;
         this->value = value;
     }
+
+    IfElseStatement::IfElseStatement(const context::Context ctx, const std::shared_ptr<Expression> condition, const std::shared_ptr<BlockStatement> body, const std::shared_ptr<IfElseStatement> next) {
+        this->node_type = NodeType::IfElseStmt;
+        this->ctx = ctx;
+        this->condition = condition;
+        this->body = body;
+        this->next = next;
+    }
 }

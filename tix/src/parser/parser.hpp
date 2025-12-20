@@ -37,9 +37,13 @@ namespace parser {
         ParseResult statement();
         ParseResult expression();
 
-        ParseResult variable_declaration_statement(const ParseResult data_type);
+        ParseResult inner_block();
+
+        ParseResult variable_declaration_statement(ParseResult data_type);
+        ParseResult if_else_statement();
 
         ParseResult assignment_expression();
+        ParseResult comparative_expression();
         ParseResult additive_expression();
         ParseResult multiplicative_expression();
         ParseResult unary_expression();

@@ -8,6 +8,7 @@ namespace parser {
         // Stmts
         BlockStmt,
         VariableDeclarationStmt,
+        IfElseStmt,
 
         // Exprs
         AssignmentExpr,

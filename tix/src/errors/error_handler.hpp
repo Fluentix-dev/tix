@@ -2,7 +2,6 @@
 
 #include "../context/positions.hpp"
 #include <string>
-#include <iostream>
 
 namespace errors {
     struct Error {
@@ -37,6 +36,10 @@ namespace errors {
 
     struct ModuleError : public Error {
         ModuleError(const context::Context context, const std::string details);
+    };
+
+    struct ArgumentError : public Error {
+        ArgumentError(const context::Context context, const std::string details);
     };
 
     void print_error(const Error error);

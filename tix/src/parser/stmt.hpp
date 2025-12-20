@@ -21,4 +21,12 @@ namespace parser {
 
         VariableDeclarationStatement(const context::Context ctx, const bool constant, const std::shared_ptr<Expression> data_type, const std::string var_name, const std::shared_ptr<Expression> value);
     };
+
+    struct IfElseStatement : public Statement {
+        std::shared_ptr<Expression> condition;
+        std::shared_ptr<BlockStatement> body;
+        std::shared_ptr<IfElseStatement> next;
+
+        IfElseStatement(const context::Context ctx, const std::shared_ptr<Expression> condition, const std::shared_ptr<BlockStatement> body, const std::shared_ptr<IfElseStatement> next);
+    };
 }

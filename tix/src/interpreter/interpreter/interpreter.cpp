@@ -8,6 +8,7 @@
 
 #define BlockStmt parser::NodeType::BlockStmt
 #define VariableDeclarationStmt parser::NodeType::VariableDeclarationStmt
+#define IfElseStmt parser::NodeType::IfElseStmt
 
 #define AssignmentExpr parser::NodeType::AssignmentExpr
 #define BinaryExpr parser::NodeType::BinaryExpr
@@ -67,6 +68,30 @@ namespace interpreter {
 
             return scope->declare(variable_declaration->ctx, variable_declaration->constant, std::static_pointer_cast<Type>(data_type.result)->type, variable_declaration->var_name, value.result);
         }
+        case IfElseStmt: {
+            std::shared_ptr<parser::IfElseStatement> if_else = std::static_pointer_cast<parser::IfElseStatement>(stmt);
+            std::shared_ptr<Scope> child_scope = std::make_shared<Scope>(Scope(scope));
+            while (if_else != nullptr) {
+                RuntimeResult condition = this->evaluate(scope, if_else->condition);
+                if (condition.error != nullptr) {
+                    return condition;
+                }
+
+                if (condition.result->data_type != "boolean") {
+                    return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(if_else->condition->ctx, "expected a boolean in the condition parameter")));
+                }
+
+                std::shared_ptr<Boolean> boolean = std::static_pointer_cast<Boolean>(condition.result);
+                if (boolean->value) {
+                    RuntimeResult body = this->evaluate(child_scope, if_else->body);
+                    return body;
+                }
+
+                if_else = if_else->next;
+            }
+
+            return RuntimeResult(nullptr, nullptr);
+        }
         case AssignmentExpr: {
             std::shared_ptr<parser::AssignmentExpression> assignment = std::static_pointer_cast<parser::AssignmentExpression>(stmt);
             switch (assignment->assigner->node_type) {
@@ -113,6 +138,30 @@ namespace interpreter {
 
             if (binary->op == "%") {
                 return lhs.result->mod(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == "==") {
+                return lhs.result->equals(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == "!=") {
+                return lhs.result->not_equals(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == ">") {
+                return lhs.result->greater_than(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == "<") {
+                return lhs.result->smaller_than(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == ">=") {
+                return lhs.result->greater_than_or_equals(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == "<=") {
+                return lhs.result->smaller_than_or_equals(binary->ctx, rhs.result);
             }
 
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(binary->ctx, "unsupported operand '" + binary->op + "'")));
@@ -233,6 +282,23 @@ namespace interpreter {
                     }))}
                 })), nullptr);
             }
+
+            // if (module_name == "math") {
+            //     context::Context ctx = get->ctx;
+            //     return RuntimeResult(std::make_shared<Module>(Module(ctx, {
+            //         {"floor", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+            //             if (args.size() != 1) {
+            //                 return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'floor', got " + std::to_string(args.size()) + "/1")));
+            //             }
+
+            //             if (args[0]->data_type != "double") {
+            //                 return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expect a double in 'val'")));
+            //             }
+
+                        
+            //         }))}
+            //     })), nullptr);
+            // }
             
             return RuntimeResult(nullptr, std::make_shared<errors::ModuleError>(errors::ModuleError(stmt->ctx, "module '" + get->module_name + "' does not exist")));
         }

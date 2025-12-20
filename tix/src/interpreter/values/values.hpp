@@ -25,6 +25,12 @@ namespace interpreter {
         virtual RuntimeResult unplus(const context::Context ctx);
         virtual RuntimeResult negate(const context::Context ctx);
         virtual RuntimeResult percent(const context::Context ctx);
+        virtual RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
         virtual RuntimeResult repr(const context::Context ctx);
         virtual RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args);
         virtual RuntimeResult access(const context::Context ctx, const std::string attr);
@@ -51,6 +57,12 @@ namespace interpreter {
         RuntimeResult unplus(const context::Context ctx) override;
         RuntimeResult negate(const context::Context ctx) override;
         RuntimeResult percent(const context::Context ctx) override;
+        RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 
@@ -66,6 +78,12 @@ namespace interpreter {
         RuntimeResult unplus(const context::Context ctx) override;
         RuntimeResult negate(const context::Context ctx) override;
         RuntimeResult percent(const context::Context ctx) override;
+        RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 
@@ -80,6 +98,8 @@ namespace interpreter {
     struct Null : public RuntimeValue {
         Null(const context::Context ctx);
 
+        // RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        // RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 
@@ -87,6 +107,8 @@ namespace interpreter {
         std::string value;
         String(const context::Context ctx, const std::string value);
 
+        RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
@@ -100,8 +122,29 @@ namespace interpreter {
 
     struct Module : public RuntimeValue {
         std::unordered_map<std::string, std::shared_ptr<RuntimeValue>> vars;
-
         Module(const context::Context ctx, const std::unordered_map<std::string, std::shared_ptr<RuntimeValue>> vars);
+        
         RuntimeResult access(const context::Context ctx, const std::string attr);
+    };
+
+    struct Boolean : public RuntimeValue {
+        bool value;
+        Boolean(const context::Context ctx, const bool value);
+
+        RuntimeResult add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult subtract(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult multiply(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult divide(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult mod(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;  
+        RuntimeResult unplus(const context::Context ctx) override;
+        RuntimeResult negate(const context::Context ctx) override;
+        RuntimeResult percent(const context::Context ctx) override;
+        RuntimeResult equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult repr(const context::Context ctx) override;
     };
 }

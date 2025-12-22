@@ -283,22 +283,27 @@ namespace interpreter {
                 })), nullptr);
             }
 
-            // if (module_name == "math") {
-            //     context::Context ctx = get->ctx;
-            //     return RuntimeResult(std::make_shared<Module>(Module(ctx, {
-            //         {"floor", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
-            //             if (args.size() != 1) {
-            //                 return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'floor', got " + std::to_string(args.size()) + "/1")));
-            //             }
+            if (module_name == "math") {
+                context::Context ctx = get->ctx;
+                return RuntimeResult(std::make_shared<Module>(Module(ctx, {
+                    {"floor", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'floor', got " + std::to_string(args.size()) + "/1")));
+                        }
 
-            //             if (args[0]->data_type != "double") {
-            //                 return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expect a double in 'val'")));
-            //             }
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expect a double in 'val'")));
+                        }
 
-                        
-            //         }))}
-            //     })), nullptr);
-            // }
+                        long long int_part = std::static_pointer_cast<Double>(args[0])->value;
+                        if (int_part < 0) {
+                            int_part--;
+                        }
+
+                        return RuntimeResult(std::make_shared<int>(Int(ctx, int_part)), nullptr);
+                    }))}
+                })), nullptr);
+            }
             
             return RuntimeResult(nullptr, std::make_shared<errors::ModuleError>(errors::ModuleError(stmt->ctx, "module '" + get->module_name + "' does not exist")));
         }
@@ -306,4 +311,5 @@ namespace interpreter {
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(stmt->ctx, "unsupported node type: " + std::to_string(static_cast<int>(stmt->node_type)))));
         }
     }
+
 }

@@ -11,8 +11,9 @@
 [X] String literal
 [X] Add all escape characters
 [X] Comparison operators
-[ ] && || !
-[ ] For and while loop
+[X] && || !
+[#] For loop
+[ ] +=, -=, *=, /=, %=, ++, --
 
 # Interpreter
 [ ] Add support for operator overridding for custom and built-in data types
@@ -29,9 +30,10 @@
 [X] If else (you must remember to add new SCOPES)
 [X] Booleans (true/false)
 [X] Comparison operators
-[ ] && || ! by truthy and falsy + short-circuit
-[ ] For and while loop (add scoping)
-[ ] math module
+[X] && || ! (only for boolean support)
+[#] For loop (only left is: for var init : )
+[#] math module (halting for now)
+[ ] +=, -=, *=, /=, %=, ++, --
 
 # Compiling
 [ ] Remove unused variables

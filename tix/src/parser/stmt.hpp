@@ -29,4 +29,21 @@ namespace parser {
 
         IfElseStatement(const context::Context ctx, const std::shared_ptr<Expression> condition, const std::shared_ptr<BlockStatement> body, const std::shared_ptr<IfElseStatement> next);
     };
+
+    struct WhileStatement : public Statement {
+        std::shared_ptr<Expression> condition;
+        std::shared_ptr<BlockStatement> body;
+
+        WhileStatement(const context::Context ctx, const std::shared_ptr<Expression> condition, const std::shared_ptr<BlockStatement> body);
+    };
+
+    // for init; condition; increment {}
+    struct ForV1Statement : public Statement {
+        std::shared_ptr<Statement> initialization;
+        std::shared_ptr<Expression> condition;
+        std::shared_ptr<Statement> increment;
+        std::shared_ptr<BlockStatement> body;
+
+        ForV1Statement(const context::Context ctx, const std::shared_ptr<Statement> initialization, const std::shared_ptr<Expression> condition, const std::shared_ptr<Statement> increment, const std::shared_ptr<BlockStatement> body);
+    };
 }

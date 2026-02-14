@@ -31,6 +31,9 @@ namespace interpreter {
         virtual RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
         virtual RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
         virtual RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult and_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult or_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other);
+        virtual RuntimeResult not_(const context::Context ctx);
         virtual RuntimeResult repr(const context::Context ctx);
         virtual RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args);
         virtual RuntimeResult access(const context::Context ctx, const std::string attr);
@@ -114,8 +117,8 @@ namespace interpreter {
     };
 
     struct BuiltInFunction : public RuntimeValue {
-        std::function<RuntimeResult(std::vector<std::shared_ptr<RuntimeValue>>)> fn;
-        BuiltInFunction(const context::Context ctx, const std::function<RuntimeResult(std::vector<std::shared_ptr<RuntimeValue>>)> fn);
+        std::function<RuntimeResult(context::Context, std::vector<std::shared_ptr<RuntimeValue>>)> fn;
+        BuiltInFunction(const context::Context ctx, const std::function<RuntimeResult(context::Context, std::vector<std::shared_ptr<RuntimeValue>>)> fn);
 
         RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args) override;
     };
@@ -145,6 +148,9 @@ namespace interpreter {
         RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult and_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult or_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult not_(const context::Context ctx) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 }

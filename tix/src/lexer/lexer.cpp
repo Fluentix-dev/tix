@@ -34,7 +34,9 @@ namespace lexer {
             {"const", TokenType::Const},
             {"get", TokenType::Get},
             {"if", TokenType::If},
-            {"else", TokenType::Else}
+            {"else", TokenType::Else},
+            {"for", TokenType::For},
+            {"while", TokenType::While}
         };
 
         this->idx = -1;
@@ -104,7 +106,7 @@ namespace lexer {
                     this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::NotEquals, "!="));
                     this->advance();
                 } else {
-                    this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, pos_start, this->pos), "invalid character '!'"));
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Not, "!"));
                 }
 
                 continue;
@@ -133,6 +135,32 @@ namespace lexer {
                     this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Smaller, "<"));
                 }
 
+                continue;
+            }
+
+            if (this->current_char == '&') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '&') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::And, "&&"));
+                } else {
+                    this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), "expected '&' in '&&'"));
+                }
+
+                this->advance();
+                continue;
+            }
+
+            if (this->current_char == '|') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '|') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::Or, "||"));
+                } else {
+                    this->errors.push_back(errors::SyntaxError(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), "expected '|' in '||'"));
+                }
+
+                this->advance();
                 continue;
             }
 
@@ -241,7 +269,7 @@ namespace lexer {
     Token Lexer::build_ident() {
         std::string ident = "";
         context::Position position_start = this->pos.copy();
-        while (!this->overflow() && (('A' <= this->current_char && this->current_char <= 'Z') || ('a' <= this->current_char && this->current_char <= 'z') || this->current_char == '_')) {
+        while (!this->overflow() && (('A' <= this->current_char && this->current_char <= 'Z') || ('a' <= this->current_char && this->current_char <= 'z') || ('0' <= this->current_char && this->current_char <= '9') || this->current_char == '_')) {
             ident += this->current_char;
             this->advance();
         }

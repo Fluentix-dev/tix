@@ -47,10 +47,16 @@
 #define Else lexer::TokenType::Else
 #define LBrac lexer::TokenType::LBrac
 #define RBrac lexer::TokenType::RBrac
+#define For lexer::TokenType::For
+#define While lexer::TokenType::While
+#define And lexer::TokenType::And
+#define Or lexer::TokenType::Or
+#define Not lexer::TokenType::Not
 
 #define comparative !this->overflow() && (tt == EqualComp || tt == NotEquals || tt == Greater || tt == GreaterOrEquals || tt == Smaller || tt == SmallerOrEquals)
 #define additive !this->overflow() && (tt == Plus || tt == Minus)
 #define multiplicative !this->overflow() && (tt == Mult || tt == Div || tt == Mod)
+#define unary !this->overflow() && (tt == Plus || tt == Minus || tt == Not)
 
 namespace parser {
     std::pair<std::string, std::string> encode_string(const std::string original) {
@@ -193,7 +199,7 @@ namespace parser {
                 break;
             }
 
-            ParseResult pr = this->statement();
+            ParseResult pr = this->statement(true);
             this->block->body.push_back(pr.result);
             for (const errors::Error &err : pr.errors) {
                 this->errors.push_back(err);
@@ -201,7 +207,7 @@ namespace parser {
         }
     }
 
-    ParseResult Parser::statement() {
+    ParseResult Parser::statement(const bool eol) {
         switch (tt) {
         case Const: {
             lexer::Token const_tok = this->current_tok;
@@ -222,28 +228,38 @@ namespace parser {
             variable_declaration->constant = true;
             variable_declaration->ctx.start = const_tok.ctx.start;
 
-            pr = this->eol();
-            for (const errors::Error &err : pr.errors) {
-                data_type.errors.push_back(err);
+            if (eol) {
+                pr = this->eol();
+                for (const errors::Error &err : pr.errors) {
+                    data_type.errors.push_back(err);
+                }
             }
 
             return ParseResult(variable_declaration, data_type.errors);
         }
         case If:
             return this->if_else_statement();
+        case While:
+            return this->while_statement();
+        case For:
+            return this->for_statement();
         default: {
             ParseResult pr = this->expression();
             if (tt == Ident) {
                 pr = this->variable_declaration_statement(pr);
-                ParseResult pr2 = this->eol();
-                for (const errors::Error &err : pr.errors) {
-                    pr.errors.push_back(err);
+                if (eol) {
+                    ParseResult pr2 = this->eol();
+                    for (const errors::Error &err : pr.errors) {
+                        pr.errors.push_back(err);
+                    }
                 }
             }
 
-            ParseResult pr2 = this->eol();
-            for (const errors::Error &err : pr2.errors) {
-                pr.errors.push_back(err);
+            if (eol) {
+                ParseResult pr2 = this->eol();
+                for (const errors::Error &err : pr2.errors) {
+                    pr.errors.push_back(err);
+                }
             }
 
             return pr;
@@ -269,7 +285,7 @@ namespace parser {
                 break;
             }
             
-            ParseResult pr = this->statement();
+            ParseResult pr = this->statement(true);
             for (const errors::Error &err : pr.errors) {
                 errs.push_back(err);
             }
@@ -373,19 +389,82 @@ namespace parser {
         return ParseResult(std::make_shared<IfElseStatement>(IfElseStatement(context::Context(this->fn, this->src, pos_start, else_body.result->ctx.end), std::static_pointer_cast<Expression>(condition.result), std::static_pointer_cast<BlockStatement>(body.result), std::make_shared<IfElseStatement>(else_body.result->ctx, std::make_shared<IdentifierExpression>(IdentifierExpression(context::Context(this->fn, this->src, tc.end, tc.end), "true")), std::static_pointer_cast<BlockStatement>(else_body.result), nullptr))), errs);
     }
 
+    ParseResult Parser::while_statement() {
+        context::Position pos_start = tc.start;
+        this->advance();
+
+        ParseResult condition = this->expression();
+        std::vector<errors::Error> errs = {};
+        for (const errors::Error &err : condition.errors) {
+            errs.push_back(err);
+        }
+
+        ParseResult pr = this->expect(LCurl, "expected '{' to start a body");
+        for (const errors::Error &err : pr.errors) {
+            errs.push_back(err);
+        }
+        
+        ParseResult body = this->inner_block();
+        for (const errors::Error &err : body.errors) {
+            errs.push_back(err);
+        }
+
+        return ParseResult(std::make_shared<WhileStatement>(WhileStatement(context::Context(this->fn, this->src, pos_start, tc.end), std::static_pointer_cast<Expression>(condition.result), std::static_pointer_cast<BlockStatement>(body.result))), errs);
+    }
+
+    ParseResult Parser::for_statement() {
+        context::Position pos_start = tc.start;
+        this->advance();
+
+        ParseResult initialization = this->statement(true);
+        std::vector<errors::Error> errs = {};
+        for (const errors::Error &err : initialization.errors) {
+            errs.push_back(err);
+        }
+
+        this->advance();
+        ParseResult condition = this->expression();
+        for (const errors::Error &err : condition.errors) {
+            errs.push_back(err);
+        }
+
+        ParseResult pr = this->eol();
+        for (const errors::Error &err : pr.errors) {
+            errs.push_back(err);
+        }
+
+        this->advance();
+        ParseResult increment = this->statement(false);
+        for (const errors::Error &err : increment.errors) {
+            errs.push_back(err);
+        }
+
+        pr = this->expect(LCurl, "expected '{' to start a body");
+        for (const errors::Error &err : pr.errors) {
+            errs.push_back(err);
+        }
+
+        ParseResult body = this->inner_block();
+        for (const errors::Error &err : body.errors) {
+            errs.push_back(err);
+        }
+
+        return ParseResult(std::make_shared<ForV1Statement>(ForV1Statement(context::Context(this->fn, this->src, pos_start, tc.end), initialization.result, std::static_pointer_cast<Expression>(condition.result), increment.result, std::static_pointer_cast<BlockStatement>(body.result))), errs);
+    }
+
     ParseResult Parser::expression() {
         return this->assignment_expression();
     }
 
     ParseResult Parser::assignment_expression() {
-        ParseResult pr = this->comparative_expression();
+        ParseResult pr = this->or_expression();
         if (tt != Equals) {
             return pr;
         }
 
         lexer::Token equals = this->current_tok;
         this->advance();
-        ParseResult pr2 = this->assignment_expression();
+        ParseResult pr2 = this->or_expression();
 
         context::Position start;
         context::Position end;
@@ -409,6 +488,68 @@ namespace parser {
         }
 
         return ParseResult(std::make_shared<AssignmentExpression>(AssignmentExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(pr.result), std::static_pointer_cast<Expression>(pr2.result))), pr.errors);
+    }
+
+    ParseResult Parser::or_expression() {
+        ParseResult lhs = this->and_expression();
+        while (tt == Or) {
+            lexer::Token op = this->current_tok;
+            this->advance();
+
+            ParseResult rhs = this->and_expression();
+            for (const errors::Error &err : rhs.errors) {
+                lhs.errors.push_back(err);
+            }
+
+            context::Position start;
+            context::Position end;
+            if (lhs.errors.empty()) {
+                start = lhs.result->ctx.start;
+            } else {
+                start = op.ctx.start;
+            }
+
+            if (rhs.errors.empty()) {
+                end = rhs.result->ctx.end;
+            } else {
+                end = op.ctx.end;
+            }
+
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
+        }
+
+        return lhs;
+    }
+
+    ParseResult Parser::and_expression() {
+        ParseResult lhs = this->comparative_expression();
+        while (tt == And) {
+            lexer::Token op = this->current_tok;
+            this->advance();
+
+            ParseResult rhs = this->comparative_expression();
+            for (const errors::Error &err : rhs.errors) {
+                lhs.errors.push_back(err);
+            }
+
+            context::Position start;
+            context::Position end;
+            if (lhs.errors.empty()) {
+                start = lhs.result->ctx.start;
+            } else {
+                start = op.ctx.start;
+            }
+
+            if (rhs.errors.empty()) {
+                end = rhs.result->ctx.end;
+            } else {
+                end = op.ctx.end;
+            }
+
+            lhs.result = std::make_shared<BinaryExpression>(BinaryExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(lhs.result), op.value, std::static_pointer_cast<Expression>(rhs.result)));
+        }
+
+        return lhs;
     }
 
     ParseResult Parser::comparative_expression() {
@@ -509,7 +650,7 @@ namespace parser {
     }
 
     ParseResult Parser::unary_expression() {
-        if (additive) {
+        if (unary) {
             lexer::Token op = this->current_tok;
             this->advance();
 

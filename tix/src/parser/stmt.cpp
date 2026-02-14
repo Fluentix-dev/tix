@@ -25,4 +25,20 @@ namespace parser {
         this->body = body;
         this->next = next;
     }
+
+    WhileStatement::WhileStatement(const context::Context ctx, const std::shared_ptr<Expression> condition, const std::shared_ptr<BlockStatement> body) {
+        this->node_type = NodeType::WhileStmt;
+        this->ctx = ctx;
+        this->condition = condition;
+        this->body = body;
+    }
+
+    ForV1Statement::ForV1Statement(const context::Context ctx, const std::shared_ptr<Statement> initialization, const std::shared_ptr<Expression> condition, const std::shared_ptr<Statement> increment, const std::shared_ptr<BlockStatement> body) {
+        this->node_type = NodeType::ForV1Stmt;
+        this->ctx = ctx;
+        this->initialization = initialization;
+        this->condition = condition;
+        this->increment = increment;
+        this->body = body;
+    }
 }

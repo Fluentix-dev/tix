@@ -32,12 +32,17 @@ namespace lexer {
         Smaller,
         GreaterOrEquals,
         SmallerOrEquals,
+        And,
+        Or,
+        Not,
 
         Ident,
         Const,
         Get,
         If,
-        Else
+        Else,
+        For,
+        While
     };
 
     struct Token {

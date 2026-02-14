@@ -5,10 +5,13 @@
 #include "../../parser/expr.hpp"
 #include "../values/scopes.hpp"
 #include <memory>
+#include <cmath>
 
 #define BlockStmt parser::NodeType::BlockStmt
 #define VariableDeclarationStmt parser::NodeType::VariableDeclarationStmt
 #define IfElseStmt parser::NodeType::IfElseStmt
+#define WhileStmt parser::NodeType::WhileStmt
+#define ForV1Stmt parser::NodeType::ForV1Stmt
 
 #define AssignmentExpr parser::NodeType::AssignmentExpr
 #define BinaryExpr parser::NodeType::BinaryExpr
@@ -70,7 +73,6 @@ namespace interpreter {
         }
         case IfElseStmt: {
             std::shared_ptr<parser::IfElseStatement> if_else = std::static_pointer_cast<parser::IfElseStatement>(stmt);
-            std::shared_ptr<Scope> child_scope = std::make_shared<Scope>(Scope(scope));
             while (if_else != nullptr) {
                 RuntimeResult condition = this->evaluate(scope, if_else->condition);
                 if (condition.error != nullptr) {
@@ -83,7 +85,7 @@ namespace interpreter {
 
                 std::shared_ptr<Boolean> boolean = std::static_pointer_cast<Boolean>(condition.result);
                 if (boolean->value) {
-                    RuntimeResult body = this->evaluate(child_scope, if_else->body);
+                    RuntimeResult body = this->evaluate(std::make_shared<Scope>(Scope(scope)), if_else->body);
                     return body;
                 }
 
@@ -91,6 +93,64 @@ namespace interpreter {
             }
 
             return RuntimeResult(nullptr, nullptr);
+        }
+        case WhileStmt: {
+            std::shared_ptr<parser::WhileStatement> while_ = std::static_pointer_cast<parser::WhileStatement>(stmt);
+            while (true) {
+                RuntimeResult condition = this->evaluate(scope, while_->condition);
+                if (condition.error != nullptr) {
+                    return condition;
+                }
+
+                if (condition.result->data_type != "boolean") {
+                    return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(while_->condition->ctx, "expected a boolean in the condition parameter")));
+                }
+
+                std::shared_ptr<Boolean> boolean = std::static_pointer_cast<Boolean>(condition.result);
+                if (!boolean->value) {
+                    return RuntimeResult(nullptr, nullptr);
+                }
+
+                RuntimeResult body = this->evaluate(std::make_shared<Scope>(Scope(scope)), while_->body);
+                if (body.error != nullptr) {
+                    return body;
+                }
+            }
+        }
+        case ForV1Stmt: {
+            std::shared_ptr<parser::ForV1Statement> for_v1 = std::static_pointer_cast<parser::ForV1Statement>(stmt);
+            std::shared_ptr<Scope> child_scope = std::make_shared<Scope>(Scope(scope));
+            
+            RuntimeResult initialization = this->evaluate(child_scope, for_v1->initialization);
+            if (initialization.error != nullptr) {
+                return initialization;
+            }
+
+            while (true) {
+                RuntimeResult condition = this->evaluate(child_scope, for_v1->condition);
+                if (condition.error != nullptr) {
+                    return condition;
+                }
+
+                if (condition.result->data_type != "boolean") {
+                    return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(for_v1->condition->ctx, "expected a boolean in the condition parameter")));
+                }
+
+                std::shared_ptr<Boolean> boolean = std::static_pointer_cast<Boolean>(condition.result);
+                if (!boolean->value) {
+                    return RuntimeResult(nullptr, nullptr);
+                }
+
+                RuntimeResult body = this->evaluate(std::make_shared<Scope>(Scope(child_scope)), for_v1->body);
+                if (body.error != nullptr) {
+                    return body;
+                }
+
+                RuntimeResult increment = this->evaluate(child_scope, for_v1->increment);
+                if (increment.error != nullptr) {
+                    return increment;
+                }
+            }
         }
         case AssignmentExpr: {
             std::shared_ptr<parser::AssignmentExpression> assignment = std::static_pointer_cast<parser::AssignmentExpression>(stmt);
@@ -164,6 +224,14 @@ namespace interpreter {
                 return lhs.result->smaller_than_or_equals(binary->ctx, rhs.result);
             }
 
+            if (binary->op == "&&") {
+                return lhs.result->and_(binary->ctx, rhs.result);
+            }
+
+            if (binary->op == "||") {
+                return lhs.result->or_(binary->ctx, rhs.result);
+            }
+
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(binary->ctx, "unsupported operand '" + binary->op + "'")));
         }
         case UnaryExpr: {
@@ -183,6 +251,10 @@ namespace interpreter {
 
             if (unary->sign == "%") {
                 return value.result->percent(unary->ctx);
+            }
+            
+            if (unary->sign == "!") {
+                return value.result->not_(unary->ctx);
             }
 
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->ctx, "unsupported operand '" + unary->sign + "'")));
@@ -229,7 +301,7 @@ namespace interpreter {
             if (module_name == "io") {
                 context::Context ctx = get->ctx;
                 return RuntimeResult(std::make_shared<Module>(Module(ctx, {
-                    {"log", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                    {"log", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
                         for (const std::shared_ptr<RuntimeValue> &arg : args) {
                             RuntimeResult str_repr = arg->repr(arg->ctx);
                             if (str_repr.error != nullptr) {
@@ -245,7 +317,7 @@ namespace interpreter {
                 
                         return scope->get(ctx, "null");
                     }))},
-                    {"logln", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                    {"logln", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
                         for (const std::shared_ptr<RuntimeValue> &arg : args) {
                             RuntimeResult str_repr = arg->repr(arg->ctx);
                             if (str_repr.error != nullptr) {
@@ -262,7 +334,7 @@ namespace interpreter {
                         std::cout << "\n";
                         return scope->get(ctx, "null");
                     }))},
-                    {"prompt", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                    {"prompt", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
                         for (const std::shared_ptr<RuntimeValue> &arg : args) {
                             RuntimeResult str_repr = arg->repr(arg->ctx);
                             if (str_repr.error != nullptr) {
@@ -286,7 +358,7 @@ namespace interpreter {
             if (module_name == "math") {
                 context::Context ctx = get->ctx;
                 return RuntimeResult(std::make_shared<Module>(Module(ctx, {
-                    {"floor", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope, ctx](std::vector<std::shared_ptr<RuntimeValue>> args) {
+                    {"floor", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
                         if (args.size() != 1) {
                             return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'floor', got " + std::to_string(args.size()) + "/1")));
                         }
@@ -295,13 +367,165 @@ namespace interpreter {
                             return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expect a double in 'val'")));
                         }
 
-                        long long int_part = std::static_pointer_cast<Double>(args[0])->value;
-                        if (int_part < 0) {
+                        double val = std::static_pointer_cast<Double>(args[0])->value;
+                        long long int_part = val;
+                        if (int_part < 0 && val-int_part != 0) {
                             int_part--;
                         }
 
-                        return RuntimeResult(std::make_shared<int>(Int(ctx, int_part)), nullptr);
-                    }))}
+                        return RuntimeResult(std::make_shared<Int>(Int(ctx, int_part)), nullptr);
+                    }))},
+                    {"ceil", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'ceil', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expect a double in 'val'")));
+                        }
+
+                        double val = std::static_pointer_cast<Double>(args[0])->value;
+                        long long int_part = val;
+                        if (int_part < 0 && val-int_part != 0) {
+                            int_part--;
+                        }
+
+                        return RuntimeResult(std::make_shared<Int>(Int(ctx, int_part+1)), nullptr);
+                    }))},
+                    {"abs_int", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'abs_int', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "int") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a int in 'val'")));
+                        }
+
+                        long long value = std::static_pointer_cast<Int>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Int>(Int(ctx, (value >= 0 ? value : -value))), nullptr);
+                    }))},
+                    {"abs_double", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'abs_double', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'val'")));
+                        }
+
+                        double value = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, (value >= 0 ? value : -value))), nullptr);
+                    }))},
+                    {"dist1d_int", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 2) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 2 arguments in 'dist1d_int', got " + std::to_string(args.size()) + "/2")));
+                        }
+
+                        if (args[0]->data_type != "int") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a int in 'start'")));
+                        }
+
+                        if (args[1]->data_type != "int") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a int in 'end'")));
+                        }
+
+                        long long diff = std::static_pointer_cast<Int>(args[0])->value - std::static_pointer_cast<Int>(args[1])->value;
+                        return RuntimeResult(std::make_shared<Int>(Int(ctx, (diff >= 0 ? diff : -diff))), nullptr);
+                    }))},
+                    {"dist1d_double", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 2) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 2 arguments in 'dist1d_double', got " + std::to_string(args.size()) + "/2")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'start'")));
+                        }
+
+                        if (args[1]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'end'")));
+                        }
+
+                        double diff = std::static_pointer_cast<Double>(args[0])->value - std::static_pointer_cast<Double>(args[1])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, (diff >= 0 ? diff : -diff))), nullptr);
+                    }))},
+                    {"pi", std::make_shared<Double>(Double(ctx, 3.141592653589793))},
+                    {"e", std::make_shared<Double>(Double(ctx, 2.718281828459045))},
+                    {"sin", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'sin', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'theta'")));
+                        }
+
+                        double theta = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, std::sin(theta))), nullptr);
+                    }))},
+                    {"cos", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'cos', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'theta'")));
+                        }
+
+                        double theta = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, std::cos(theta))), nullptr);
+                    }))},
+                    {"to_radians", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'to_radians', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'degrees'")));
+                        }
+
+                        double degrees = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, degrees/180*3.141592653589793)), nullptr);
+                    }))},
+                    {"to_degrees", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'to_degrees', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'radians'")));
+                        }
+
+                        double radians = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, radians*180.0/3.141592653589793)), nullptr);
+                    }))},
+                    {"sqrt", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'sqrt', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'val'")));
+                        }
+
+                        double value = std::static_pointer_cast<Double>(args[0])->value;
+                        if (value < 0) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::MathError>(errors::MathError(ctx, "i don't want to work with complex numbers...")));
+                        }
+
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, std::sqrt(value))), nullptr);
+                    }))},
+                    {"cbrt", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'cbrt', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type != "double") {
+                            return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "expected a double in 'val'")));
+                        }
+
+                        double value = std::static_pointer_cast<Double>(args[0])->value;
+                        return RuntimeResult(std::make_shared<Double>(Double(ctx, std::cbrt(value))), nullptr);
+                    }))},
                 })), nullptr);
             }
             
@@ -311,5 +535,4 @@ namespace interpreter {
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(stmt->ctx, "unsupported node type: " + std::to_string(static_cast<int>(stmt->node_type)))));
         }
     }
-
 }

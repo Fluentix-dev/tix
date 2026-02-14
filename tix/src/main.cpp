@@ -17,6 +17,15 @@
 
 void debug_expr(std::shared_ptr<parser::Expression> expr) {
     switch (expr->node_type) {
+    case parser::NodeType::AssignmentExpr: {
+        std::shared_ptr<parser::AssignmentExpression> assignment = std::static_pointer_cast<parser::AssignmentExpression>(expr);
+        std::cout << "(";
+        debug_expr(assignment->assigner);
+        std::cout << " = ";
+        debug_expr(assignment->assignee);
+        std::cout << ")";
+        break;
+    }
     case parser::NodeType::BinaryExpr: {
         std::shared_ptr<parser::BinaryExpression> binary = std::static_pointer_cast<parser::BinaryExpression>(expr);
         std::cout << "(";
@@ -111,6 +120,28 @@ void debug_stmt(const size_t indentation, std::shared_ptr<parser::Statement> stm
 
         break;
     }
+    case parser::NodeType::WhileStmt: {
+        std::shared_ptr<parser::WhileStatement> while_ = std::static_pointer_cast<parser::WhileStatement>(stmt);
+        std::cout << "WHILE ";
+        debug_expr(while_->condition);
+        std::cout << " THEN PERFORM\n";
+        debug_stmt(indentation+1, while_->body);
+        break;
+    }
+    case parser::NodeType::ForV1Stmt: {
+        std::shared_ptr<parser::ForV1Statement> for_v1 = std::static_pointer_cast<parser::ForV1Statement>(stmt);
+        std::cout << "FOR (\n";
+        debug_stmt(indentation+1, for_v1->initialization);
+        debug_stmt(indentation+1, for_v1->condition);
+        debug_stmt(indentation+1, for_v1->increment);
+        for (size_t i = 0; i < indentation; i++) {
+            std::cout << "  ";
+        }
+
+        std::cout << "), PERFORM\n";
+        debug_stmt(indentation+1, for_v1->body);
+        break;
+    }
     default:
         debug_expr(std::static_pointer_cast<parser::Expression>(stmt));
     }
@@ -168,7 +199,7 @@ int main(int argc, char* argv[]) {
 
     // and ends here
 
-    lexer::Lexer lex = lexer::Lexer("files/main.tx", real);
+    lexer::Lexer lex = lexer::Lexer(fn, real);
     lex.tokenize();
 
     if (!lex.errors.empty()) {
@@ -181,7 +212,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    parser::Parser parse = parser::Parser("main.tx", real, lex.tokens);
+    parser::Parser parse = parser::Parser(fn, real, lex.tokens);
     parse.parse();
 
     if (!parse.errors.empty()) {
@@ -194,7 +225,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    //debug_stmt(0, parse.block);
+    // debug_stmt(0, parse.block);
     interpreter::Interpreter interpret = interpreter::Interpreter(global_scope, parse.block);
     interpret.run();
     if (interpret.error != nullptr) {

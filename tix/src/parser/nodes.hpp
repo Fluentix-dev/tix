@@ -9,7 +9,9 @@ namespace parser {
         BlockStmt,
         VariableDeclarationStmt,
         IfElseStmt,
-
+        WhileStmt,
+        ForV1Stmt,
+        
         // Exprs
         AssignmentExpr,
         BinaryExpr,

@@ -34,15 +34,19 @@ namespace parser {
         ParseResult expect(const lexer::TokenType expected, const std::string error_msg);
 
         // Parser essentials
-        ParseResult statement();
+        ParseResult statement(const bool eol);
         ParseResult expression();
 
         ParseResult inner_block();
 
         ParseResult variable_declaration_statement(ParseResult data_type);
         ParseResult if_else_statement();
+        ParseResult while_statement();
+        ParseResult for_statement();
 
         ParseResult assignment_expression();
+        ParseResult or_expression();
+        ParseResult and_expression();
         ParseResult comparative_expression();
         ParseResult additive_expression();
         ParseResult multiplicative_expression();

@@ -156,6 +156,8 @@ namespace interpreter {
             std::shared_ptr<Boolean> rhs = std::static_pointer_cast<Boolean>(other);
             return RuntimeResult(std::make_shared<Boolean>(ctx, lhs_val == (rhs->value ? 1 : 0)), nullptr);
         }
+
+        return RuntimeResult(std::make_shared<Boolean>(ctx, false), nullptr);
     }
 
     RuntimeResult Boolean::not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
@@ -174,6 +176,8 @@ namespace interpreter {
             std::shared_ptr<Boolean> rhs = std::static_pointer_cast<Boolean>(other);
             return RuntimeResult(std::make_shared<Boolean>(ctx, lhs_val != (rhs->value ? 1 : 0)), nullptr);
         }
+
+        return RuntimeResult(std::make_shared<Boolean>(ctx, false), nullptr);
     }
 
     RuntimeResult Boolean::greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
@@ -284,6 +288,16 @@ namespace interpreter {
 
     RuntimeResult Boolean::not_(const context::Context ctx) {
         return RuntimeResult(std::make_shared<Boolean>(ctx, !this->value), nullptr);
+    }
+
+    RuntimeResult Boolean::increment(const context::Context ctx) {
+        size_t value = (this->value ? 1 : 0);
+        return RuntimeResult(std::make_shared<Int>(Int(ctx, value+1)), nullptr);
+    }
+
+    RuntimeResult Boolean::decrement(const context::Context ctx) {
+        size_t value = (this->value ? 1 : 0);
+        return RuntimeResult(std::make_shared<Int>(Int(ctx, value-1)), nullptr);
     }
 
     RuntimeResult Boolean::repr(const context::Context ctx) {

@@ -249,6 +249,14 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than or equals comparison on 'int' and '" + other->data_type + "'")));
     }
 
+    RuntimeResult Int::increment(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Int>(Int(ctx, this->value+1)), nullptr);
+    }
+
+    RuntimeResult Int::decrement(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Int>(Int(ctx, this->value-1)), nullptr);
+    }
+
     RuntimeResult Int::repr(const context::Context ctx) {
         return RuntimeResult(std::make_shared<String>(String(ctx, std::to_string(value))), nullptr);
     }

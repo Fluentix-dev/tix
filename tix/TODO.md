@@ -13,7 +13,8 @@
 [X] Comparison operators
 [X] && || !
 [#] For loop
-[ ] +=, -=, *=, /=, %=, ++, --
+[X] +=, -=, *=, /=, %=
+[X] ++, --
 
 # Interpreter
 [ ] Add support for operator overridding for custom and built-in data types
@@ -33,7 +34,8 @@
 [X] && || ! (only for boolean support)
 [#] For loop (only left is: for var init : )
 [#] math module (halting for now)
-[ ] +=, -=, *=, /=, %=, ++, --
+[X] +=, -=, *=, /=, %=
+[ ] ++, --
 
 # Compiling
 [ ] Remove unused variables

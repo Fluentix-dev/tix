@@ -16,10 +16,6 @@ namespace lexer {
         this->tokens.clear();
         this->errors.clear();
         this->single_char_token = {
-            {'+', TokenType::Plus},
-            {'-', TokenType::Minus},
-            {'*', TokenType::Mult},
-            {'/', TokenType::Div},
             {'(', TokenType::LParen},
             {')', TokenType::RParen},
             {'[', TokenType::LBrac},
@@ -63,20 +59,84 @@ namespace lexer {
                 continue;
             }
 
+            if (this->current_char == '+') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::PlusEquals, "+="));
+                    this->advance();
+                } else if (this->current_char == '+') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::Increment, "++"));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Plus, "+"));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '-') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::MinusEquals, "-="));
+                    this->advance();
+                } else if (this->current_char == '-') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::Decrement, "--"));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Not, "!"));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '*') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::MultEquals, "*="));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Mult, "*"));
+                }
+
+                continue;
+            }
+
+            if (this->current_char == '/') {
+                context::Position pos_start = this->pos.copy();
+                this->advance();
+                if (this->current_char == '=') {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::DivEquals, "/="));
+                    this->advance();
+                } else {
+                    this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Div, "/"));
+                }
+
+                continue;
+            }
+
             if (this->current_char == '%') {
                 if (lower_parse_levels) {
                     this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Mod, "%"));
+                    this->advance();
                 } else {
-                    this->tokens.push_back(Token(context::Context(ctx_ess, this->pos, context::Position(this->pos.col+1, this->pos.line)), TokenType::Percent, "%"));
+                    context::Position pos_start = this->pos.copy();
+                    this->advance();
+                    if (this->current_char == '=') {
+                        this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, context::Position(this->pos.col+1, this->pos.line)), TokenType::ModEquals, "%="));
+                        this->advance();
+                    } else {
+                        this->tokens.push_back(Token(context::Context(ctx_ess, pos_start, this->pos.copy()), TokenType::Percent, "%"));
+                    }
                 }
 
-                this->advance();
                 continue;
             }
 
             if (this->current_char == '.') {
                 if (number_dot) {
-                    std::cout << this->past() << " ";
                     this->tokens.push_back(this->build_number());
                     continue;
                 }

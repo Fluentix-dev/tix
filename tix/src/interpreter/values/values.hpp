@@ -37,6 +37,8 @@ namespace interpreter {
         virtual RuntimeResult repr(const context::Context ctx);
         virtual RuntimeResult call(const context::Context ctx, const std::vector<std::shared_ptr<RuntimeValue>> args);
         virtual RuntimeResult access(const context::Context ctx, const std::string attr);
+        virtual RuntimeResult increment(const context::Context ctx);
+        virtual RuntimeResult decrement(const context::Context ctx);
     };
 
     struct RuntimeResult {
@@ -66,6 +68,8 @@ namespace interpreter {
         RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult increment(const context::Context ctx) override;
+        RuntimeResult decrement(const context::Context ctx) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 
@@ -87,6 +91,8 @@ namespace interpreter {
         RuntimeResult smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
+        RuntimeResult increment(const context::Context ctx) override;
+        RuntimeResult decrement(const context::Context ctx) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 
@@ -151,6 +157,8 @@ namespace interpreter {
         RuntimeResult and_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult or_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) override;
         RuntimeResult not_(const context::Context ctx) override;
+        RuntimeResult increment(const context::Context ctx) override;
+        RuntimeResult decrement(const context::Context ctx) override;
         RuntimeResult repr(const context::Context ctx) override;
     };
 }

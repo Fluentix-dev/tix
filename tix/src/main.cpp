@@ -21,7 +21,7 @@ void debug_expr(std::shared_ptr<parser::Expression> expr) {
         std::shared_ptr<parser::AssignmentExpression> assignment = std::static_pointer_cast<parser::AssignmentExpression>(expr);
         std::cout << "(";
         debug_expr(assignment->assigner);
-        std::cout << " = ";
+        std::cout << " " << assignment->op << " ";
         debug_expr(assignment->assignee);
         std::cout << ")";
         break;

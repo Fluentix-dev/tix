@@ -86,6 +86,14 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::AttributeError>(errors::AttributeError(ctx, "'" + this->data_type + "' has no attribute '" + attr + "'")));
     }
 
+    RuntimeResult RuntimeValue::increment(const context::Context ctx) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform increment on '" + this->data_type + "'")));
+    }
+
+    RuntimeResult RuntimeValue::decrement(const context::Context ctx) {
+        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "Cannot perform decrement on '" + this->data_type + "'")));
+    }
+
     RuntimeResult::RuntimeResult(const std::shared_ptr<RuntimeValue> result, const std::shared_ptr<errors::Error> error) {
         this->result = result;
         this->error = error;

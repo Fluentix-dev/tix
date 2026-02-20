@@ -161,7 +161,73 @@ namespace interpreter {
                     return assignee;
                 }
 
-                return scope->assign(assignment->ctx, std::static_pointer_cast<parser::IdentifierExpression>(assignment->assigner)->var_name, assignee.result);
+                std::shared_ptr<parser::IdentifierExpression> variable = std::static_pointer_cast<parser::IdentifierExpression>(assignment->assigner);
+                std::string var_name = variable->var_name;
+                if (assignment->op == "=") {
+                    return scope->assign(assignment->ctx, var_name, assignee.result);
+                } else if (assignment->op == "+=") {
+                    RuntimeResult value = scope->get(variable->ctx, var_name);
+                    if (value.error) {
+                        return value;
+                    }
+
+                    RuntimeResult assigned = value.result->add(assignment->ctx, assignee.result);
+                    if (assigned.error) {
+                        return assigned;
+                    }
+
+                    return scope->assign(assignment->ctx, var_name, assigned.result);
+                } else if (assignment->op == "-=") {
+                    RuntimeResult value = scope->get(variable->ctx, var_name);
+                    if (value.error) {
+                        return value;
+                    }
+
+                    RuntimeResult assigned = value.result->subtract(assignment->ctx, assignee.result);
+                    if (assigned.error) {
+                        return assigned;
+                    }
+
+                    return scope->assign(assignment->ctx, var_name, assigned.result);
+                } else if (assignment->op == "*=") {
+                    RuntimeResult value = scope->get(variable->ctx, var_name);
+                    if (value.error) {
+                        return value;
+                    }
+
+                    RuntimeResult assigned = value.result->multiply(assignment->ctx, assignee.result);
+                    if (assigned.error) {
+                        return assigned;
+                    }
+
+                    return scope->assign(assignment->ctx, var_name, assigned.result);
+                } else if (assignment->op == "/=") {
+                    RuntimeResult value = scope->get(variable->ctx, var_name);
+                    if (value.error) {
+                        return value;
+                    }
+
+                    RuntimeResult assigned = value.result->divide(assignment->ctx, assignee.result);
+                    if (assigned.error) {
+                        return assigned;
+                    }
+
+                    return scope->assign(assignment->ctx, var_name, assigned.result);
+                } else if (assignment->op == "%=") {
+                    RuntimeResult value = scope->get(variable->ctx, var_name);
+                    if (value.error) {
+                        return value;
+                    }
+
+                    RuntimeResult assigned = value.result->mod(assignment->ctx, assignee.result);
+                    if (assigned.error) {
+                        return assigned;
+                    }
+
+                    return scope->assign(assignment->ctx, var_name, assigned.result);
+                }
+                
+                return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(assignment->ctx, "unsupported operand: '" + assignment->op + "'")));
             }
             default:
                 return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(assignment->assigner->ctx, "assignment check not sturdy enough")));
@@ -255,6 +321,76 @@ namespace interpreter {
             
             if (unary->sign == "!") {
                 return value.result->not_(unary->ctx);
+            }
+
+            if (unary->sign == "++") {
+                switch (unary->value->node_type) {
+                case IdentifierExpr: {
+                    RuntimeResult assigned = value.result->increment(unary->ctx);
+                    if (assigned.error != nullptr) {
+                        return assigned;
+                    }
+
+                    return scope->assign(unary->ctx, std::static_pointer_cast<parser::IdentifierExpression>(unary->value)->var_name, assigned.result);
+                }
+                default:
+                    return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->value->ctx, "assignment check not sturdy enough")));
+                }
+            }
+
+            if (unary->sign == "--") {
+                switch (unary->value->node_type) {
+                case IdentifierExpr: {
+                    RuntimeResult assigned = value.result->decrement(unary->ctx);
+                    if (assigned.error != nullptr) {
+                        return assigned;
+                    }
+
+                    return scope->assign(unary->ctx, std::static_pointer_cast<parser::IdentifierExpression>(unary->value)->var_name, assigned.result);
+                }
+                default:
+                    return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->value->ctx, "assignment check not sturdy enough")));
+                }
+            }
+
+            if (unary->sign == "++ end") {
+                switch (unary->value->node_type) {
+                case IdentifierExpr: {
+                    RuntimeResult assigned = value.result->increment(unary->ctx);
+                    if (assigned.error != nullptr) {
+                        return assigned;
+                    }
+
+                    RuntimeResult rr = scope->assign(unary->ctx, std::static_pointer_cast<parser::IdentifierExpression>(unary->value)->var_name, assigned.result);
+                    if (rr.error != nullptr) {
+                        return rr;
+                    }
+
+                    return value;
+                }
+                default:
+                    return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->value->ctx, "assignment check not sturdy enough")));
+                }
+            }
+
+            if (unary->sign == "-- end") {
+                switch (unary->value->node_type) {
+                case IdentifierExpr: {
+                    RuntimeResult assigned = value.result->decrement(unary->ctx);
+                    if (assigned.error != nullptr) {
+                        return assigned;
+                    }
+
+                    RuntimeResult rr = scope->assign(unary->ctx, std::static_pointer_cast<parser::IdentifierExpression>(unary->value)->var_name, assigned.result);
+                    if (rr.error != nullptr) {
+                        return rr;
+                    }
+
+                    return value;
+                }
+                default:
+                    return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->value->ctx, "assignment check not sturdy enough")));
+                }
             }
 
             return RuntimeResult(nullptr, std::make_shared<errors::InterpreterError>(errors::InterpreterError(unary->ctx, "unsupported operand '" + unary->sign + "'")));

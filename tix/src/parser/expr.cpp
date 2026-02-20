@@ -5,10 +5,11 @@
 #include <memory>
 
 namespace parser {
-    AssignmentExpression::AssignmentExpression(const context::Context ctx, const std::shared_ptr<Expression> assigner, const std::shared_ptr<Expression> assignee) {
+    AssignmentExpression::AssignmentExpression(const context::Context ctx, const std::shared_ptr<Expression> assigner, const std::string op, const std::shared_ptr<Expression> assignee) {
         this->node_type = NodeType::AssignmentExpr;
         this->ctx = ctx;
         this->assigner = assigner;
+        this->op = op;
         this->assignee = assignee;
     }
 

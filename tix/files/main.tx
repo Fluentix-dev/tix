@@ -1,7 +1,21 @@
 const module io = get "io";
 
-for int i = 0; i < 5; i = i + 1 {
-    for int j = 0; j < 5; j = j + 1 {
-        io.logln(i, " ", j);
-    }
-}
+int a = 5;
+io.logln(a); # 5
+
+a++;
+io.logln(a); # 6
+
+a--;
+io.logln(a); # 5
+
+++a;
+io.logln(a); # 6
+
+--a;
+io.logln(a); # 5
+
+io.logln(a++); # 5
+io.logln(a--); # 6
+io.logln(++a); # 6
+io.logln(--a); # 5

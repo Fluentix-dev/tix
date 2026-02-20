@@ -8,9 +8,10 @@
 namespace parser {
     struct AssignmentExpression : public Expression {
         std::shared_ptr<Expression> assigner;
+        std::string op;
         std::shared_ptr<Expression> assignee;
 
-        AssignmentExpression(const context::Context ctx, std::shared_ptr<Expression> assigner, const std::shared_ptr<Expression> assignee);
+        AssignmentExpression(const context::Context ctx, std::shared_ptr<Expression> assigner, const std::string op, const std::shared_ptr<Expression> assignee);
     };
 
     struct BinaryExpression : public Expression {

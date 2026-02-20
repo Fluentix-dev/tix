@@ -19,11 +19,20 @@
 #define EOF lexer::TokenType::EndOfFile
 #define Semi lexer::TokenType::Semi
 #define Plus lexer::TokenType::Plus
+#define PlusEquals lexer::TokenType::PlusEquals
+#define PlusPlus lexer::TokenType::PlusPlus
 #define Minus lexer::TokenType::Minus
+#define MinusEquals lexer::TokenType::MinusEquals
+#define MinusMinus lexer::TokenType::MinusMinus
 #define Mult lexer::TokenType::Mult
+#define MultEquals lexer::TokenType::MultEquals
 #define Div lexer::TokenType::Div
+#define DivEquals lexer::TokenType::DivEquals
 #define Mod lexer::TokenType::Mod
+#define ModEquals lexer::TokenType::ModEquals
 #define Percent lexer::TokenType::Percent
+#define Increment lexer::TokenType::Increment
+#define Decrement lexer::TokenType::Decrement
 #define LParen lexer::TokenType::LParen
 #define RParen lexer::TokenType::RParen
 #define LCurl lexer::TokenType::LCurl
@@ -56,9 +65,13 @@
 #define comparative !this->overflow() && (tt == EqualComp || tt == NotEquals || tt == Greater || tt == GreaterOrEquals || tt == Smaller || tt == SmallerOrEquals)
 #define additive !this->overflow() && (tt == Plus || tt == Minus)
 #define multiplicative !this->overflow() && (tt == Mult || tt == Div || tt == Mod)
-#define unary !this->overflow() && (tt == Plus || tt == Minus || tt == Not)
+#define unary !this->overflow() && (tt == Plus || tt == Minus || tt == Not || tt == Increment || tt == Decrement)
 
 namespace parser {
+    bool is_assignable(const std::shared_ptr<Statement> node) {
+        return node->node_type == NodeType::IdentifierExpr;
+    }
+
     std::pair<std::string, std::string> encode_string(const std::string original) {
         std::string new_str = "";
         size_t string_idx = 0;
@@ -458,7 +471,7 @@ namespace parser {
 
     ParseResult Parser::assignment_expression() {
         ParseResult pr = this->or_expression();
-        if (tt != Equals) {
+        if (tt != Equals && tt != PlusEquals && tt != MinusEquals && tt != MultEquals && tt != DivEquals && tt != ModEquals) {
             return pr;
         }
 
@@ -470,8 +483,8 @@ namespace parser {
         context::Position end;
         if (pr.errors.empty()) {
             start = pr.result->ctx.start;
-            if (pr.result->node_type != NodeType::IdentifierExpr) {
-                pr.errors.push_back(errors::SyntaxError(pr.result->ctx, "expected a variable inside assignment"));
+            if (!is_assignable(pr.result)) {
+                pr.errors.push_back(errors::SyntaxError(pr.result->ctx, "invalid syntax!"));
             }
         } else {
             start = equals.ctx.start;
@@ -487,7 +500,7 @@ namespace parser {
             pr.errors.push_back(err);
         }
 
-        return ParseResult(std::make_shared<AssignmentExpression>(AssignmentExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(pr.result), std::static_pointer_cast<Expression>(pr2.result))), pr.errors);
+        return ParseResult(std::make_shared<AssignmentExpression>(AssignmentExpression(context::Context(this->fn, this->src, start, end), std::static_pointer_cast<Expression>(pr.result), equals.value, std::static_pointer_cast<Expression>(pr2.result))), pr.errors);
     }
 
     ParseResult Parser::or_expression() {
@@ -679,6 +692,38 @@ namespace parser {
             }
 
             return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, start, op.ctx.end), "%", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
+        }
+
+        if (tt == Increment) {
+            lexer::Token op = this->current_tok;
+            this->advance();
+            context::Position start;
+            if (pr.errors.empty()) {
+                start = pr.result->ctx.start;
+                if (!is_assignable(pr.result)) {
+                    pr.errors.push_back(errors::SyntaxError(pr.result->ctx, "invalid syntax!"));
+                }
+            } else {
+                start = op.ctx.start;
+            }
+
+            return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, start, op.ctx.end), "++ end", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
+        }
+
+        if (tt == Decrement) {
+            lexer::Token op = this->current_tok;
+            this->advance();
+            context::Position start;
+            if (pr.errors.empty()) {
+                start = pr.result->ctx.start;
+                if (!is_assignable(pr.result)) {
+                    pr.errors.push_back(errors::SyntaxError(pr.result->ctx, "invalid syntax!"));
+                }
+            } else {
+                start = op.ctx.start;
+            }
+
+            return ParseResult(std::make_shared<UnaryExpression>(UnaryExpression(context::Context(this->fn, this->src, start, op.ctx.end), "-- end", std::static_pointer_cast<Expression>(pr.result))), pr.errors);
         }
 
         return pr;

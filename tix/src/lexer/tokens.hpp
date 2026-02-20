@@ -35,6 +35,13 @@ namespace lexer {
         And,
         Or,
         Not,
+        PlusEquals,
+        MinusEquals,
+        MultEquals,
+        DivEquals,
+        ModEquals,
+        Increment,
+        Decrement,
 
         Ident,
         Const,

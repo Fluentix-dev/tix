@@ -249,6 +249,14 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than or equals comparison on 'double' and '" + other->data_type + "'")));
     }
 
+    RuntimeResult Double::increment(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Double>(Double(ctx, this->value+1)), nullptr);
+    }
+
+    RuntimeResult Double::decrement(const context::Context ctx) {
+        return RuntimeResult(std::make_shared<Double>(Double(ctx, this->value-1)), nullptr);
+    }
+
     RuntimeResult Double::repr(const context::Context ctx) {
         return RuntimeResult(std::make_shared<String>(String(ctx, std::to_string(value))), nullptr);
     }

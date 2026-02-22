@@ -6,13 +6,13 @@
 #include <cmath>
 
 namespace interpreter {
-    Boolean::Boolean(const context::Context ctx, const bool value) {
+    Boolean::Boolean(const context::Context& ctx, const bool value) {
         this->ctx = ctx;
         this->data_type = "boolean";
         this->value = value;
     }
 
-    RuntimeResult Boolean::add(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::add(const context::Context&, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);
@@ -32,7 +32,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform addition on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::subtract(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::subtract(const context::Context&, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);
@@ -52,7 +52,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform addition on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::multiply(const context::Context, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::multiply(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);
@@ -72,7 +72,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform addition on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::divide(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::divide(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);
@@ -100,7 +100,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform division on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::mod(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::mod(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);
@@ -128,19 +128,19 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform modulo on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::unplus(const context::Context ctx) {
+    RuntimeResult Boolean::unplus(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Int>(ctx, (this->value ? 1 : 0)), nullptr);
     }
 
-    RuntimeResult Boolean::negate(const context::Context ctx) {
+    RuntimeResult Boolean::negate(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Int>(ctx, (this->value ? -1 : 0)), nullptr);
     }
 
-    RuntimeResult Boolean::percent(const context::Context ctx) {
+    RuntimeResult Boolean::percent(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(ctx, (this->value ? 0.01 : 0.0)), nullptr);
     }
 
-    RuntimeResult Boolean::equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -160,7 +160,7 @@ namespace interpreter {
         return RuntimeResult(std::make_shared<Boolean>(ctx, false), nullptr);
     }
 
-    RuntimeResult Boolean::not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::not_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -180,7 +180,7 @@ namespace interpreter {
         return RuntimeResult(std::make_shared<Boolean>(ctx, false), nullptr);
     }
 
-    RuntimeResult Boolean::greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::greater_than(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -200,7 +200,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform greater than comparison on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::smaller_than(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -220,7 +220,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than comparison on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::greater_than_or_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -240,7 +240,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform greater than or equals comparison on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::smaller_than_or_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         long long lhs_val = (this->value ? 1 : 0);
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
@@ -260,7 +260,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than or equals comparison on 'boolean' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Boolean::and_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::and_(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (!this->value) {
             return RuntimeResult(std::make_shared<Boolean>(ctx, false), nullptr);
         }
@@ -273,7 +273,7 @@ namespace interpreter {
         return RuntimeResult(std::make_shared<Boolean>(ctx, rhs->value), nullptr);
     }
 
-    RuntimeResult Boolean::or_(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Boolean::or_(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (this->value) {
             return RuntimeResult(std::make_shared<Boolean>(ctx, true), nullptr);
         }
@@ -286,21 +286,21 @@ namespace interpreter {
         return RuntimeResult(std::make_shared<Boolean>(ctx, rhs->value), nullptr);
     }
 
-    RuntimeResult Boolean::not_(const context::Context ctx) {
+    RuntimeResult Boolean::not_(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Boolean>(ctx, !this->value), nullptr);
     }
 
-    RuntimeResult Boolean::increment(const context::Context ctx) {
+    RuntimeResult Boolean::increment(const context::Context& ctx) {
         size_t value = (this->value ? 1 : 0);
         return RuntimeResult(std::make_shared<Int>(Int(ctx, value+1)), nullptr);
     }
 
-    RuntimeResult Boolean::decrement(const context::Context ctx) {
+    RuntimeResult Boolean::decrement(const context::Context& ctx) {
         size_t value = (this->value ? 1 : 0);
         return RuntimeResult(std::make_shared<Int>(Int(ctx, value-1)), nullptr);
     }
 
-    RuntimeResult Boolean::repr(const context::Context ctx) {
+    RuntimeResult Boolean::repr(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<String>(ctx, (this->value ? "true" : "false")), nullptr);
     }
 }

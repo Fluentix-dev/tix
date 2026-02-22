@@ -6,13 +6,13 @@
 #include <string>
 
 namespace interpreter {
-    Double::Double(const context::Context ctx, const double value) {
+    Double::Double(const context::Context& ctx, const double value) {
         this->data_type = "double";
         this->ctx = ctx;
         this->value = value;
     }
 
-    RuntimeResult Double::add(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::add(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             return RuntimeResult(std::make_shared<Double>(ctx, this->value + rhs->value), nullptr);
@@ -31,7 +31,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform addition on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::subtract(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::subtract(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             return RuntimeResult(std::make_shared<Double>(ctx, this->value - rhs->value), nullptr);
@@ -50,7 +50,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform subtraction on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::multiply(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::multiply(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             return RuntimeResult(std::make_shared<Double>(ctx, this->value * rhs->value), nullptr);
@@ -69,7 +69,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform multiplication on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::divide(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::divide(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             if (rhs->value == 0) {
@@ -96,7 +96,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform division on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::mod(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::mod(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::dynamic_pointer_cast<Int>(other);
             if (rhs->value == 0) {
@@ -123,19 +123,19 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform modulo on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::unplus(const context::Context ctx) {
+    RuntimeResult Double::unplus(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(ctx, this->value), nullptr);
     }
 
-    RuntimeResult Double::negate(const context::Context ctx) {
+    RuntimeResult Double::negate(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(ctx, -this->value), nullptr);
     }
 
-    RuntimeResult Double::percent(const context::Context ctx) {
+    RuntimeResult Double::percent(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(ctx, this->value / 100), nullptr);
     }
 
-    RuntimeResult Double::equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value == rhs->value), nullptr);
@@ -154,7 +154,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform equals comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::not_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::not_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value != rhs->value), nullptr);
@@ -173,7 +173,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform not equals comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::greater_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::greater_than(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value > rhs->value), nullptr);
@@ -192,7 +192,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform greater than comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::smaller_than(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::smaller_than(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value < rhs->value), nullptr);
@@ -211,7 +211,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::greater_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::greater_than_or_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value >= rhs->value), nullptr);
@@ -230,7 +230,7 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform greater than or equals comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::smaller_than_or_equals(const context::Context ctx, const std::shared_ptr<RuntimeValue> other) {
+    RuntimeResult Double::smaller_than_or_equals(const context::Context& ctx, const std::shared_ptr<RuntimeValue> other) {
         if (other->data_type == "int") {
             std::shared_ptr<Int> rhs = std::static_pointer_cast<Int>(other);            
             return RuntimeResult(std::make_shared<Boolean>(ctx, this->value <= rhs->value), nullptr);
@@ -249,15 +249,15 @@ namespace interpreter {
         return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot perform smaller than or equals comparison on 'double' and '" + other->data_type + "'")));
     }
 
-    RuntimeResult Double::increment(const context::Context ctx) {
+    RuntimeResult Double::increment(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(Double(ctx, this->value+1)), nullptr);
     }
 
-    RuntimeResult Double::decrement(const context::Context ctx) {
+    RuntimeResult Double::decrement(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<Double>(Double(ctx, this->value-1)), nullptr);
     }
 
-    RuntimeResult Double::repr(const context::Context ctx) {
+    RuntimeResult Double::repr(const context::Context& ctx) {
         return RuntimeResult(std::make_shared<String>(String(ctx, std::to_string(value))), nullptr);
     }
 }

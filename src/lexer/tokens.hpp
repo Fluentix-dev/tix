@@ -57,6 +57,6 @@ namespace lexer {
         context::Context ctx;
         
         Token();
-        Token(const context::Context ctx, const TokenType type, const std::string value);
+        Token(const context::Context& ctx, const TokenType type, const std::string& value);
     };
 }

@@ -13,7 +13,7 @@ namespace context {
     }
 
     Context::Context() {}
-    Context::Context(const std::string file_name, const std::string code, const Position start, const Position end) {
+    Context::Context(const std::string& file_name, const std::string& code, const Position start, const Position end) {
         this->file_name = file_name;
         this->start = start;
         this->end = end;

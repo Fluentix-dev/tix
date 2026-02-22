@@ -12,7 +12,7 @@ namespace lexer {
         std::vector<Token> tokens;
         std::vector<errors::Error> errors;
 
-        Lexer(const std::string file_name, const std::string code);
+        Lexer(const std::string& file_name, const std::string& code);
         void tokenize();
     private:
         std::string file_name;

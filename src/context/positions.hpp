@@ -21,6 +21,6 @@ namespace context {
         Position end;
 
         Context();
-        Context(const std::string file_name, const std::string code, const Position start, Position end);
+        Context(const std::string& file_name, const std::string& code, const Position start, Position end);
     };
 }

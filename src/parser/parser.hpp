@@ -21,7 +21,7 @@ namespace parser {
         std::string src;
         std::vector<errors::Error> errors;
 
-        Parser(const std::string fn, const std::string src, const std::vector<lexer::Token> tokens);
+        Parser(const std::string& fn, const std::string& src, const std::vector<lexer::Token> tokens);
         void parse();
     private:
         std::vector<lexer::Token> tokens;
@@ -31,7 +31,7 @@ namespace parser {
         void advance();
         bool overflow();
         ParseResult eol();
-        ParseResult expect(const lexer::TokenType expected, const std::string error_msg);
+        ParseResult expect(const lexer::TokenType expected, const std::string& error_msg);
 
         // Parser essentials
         ParseResult statement(const bool eol);

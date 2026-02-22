@@ -17,7 +17,10 @@
 #define tc this->current_tok.ctx
 
 using enum lexer::TokenType;
+#ifdef EOF
+#undef EOF
 #define EOF EndOfFile
+#endif
 
 #define comparative !this->overflow() && (tt == EqualComp || tt == NotEquals || tt == Greater || tt == GreaterOrEquals || tt == Smaller || tt == SmallerOrEquals)
 #define additive !this->overflow() && (tt == Plus || tt == Minus)
@@ -29,7 +32,7 @@ namespace parser {
         return node->node_type == NodeType::IdentifierExpr;
     }
 
-    std::pair<std::string, std::string> encode_string(const std::string original) {
+    std::pair<std::string, std::string> encode_string(const std::string& original) {
         std::string new_str = "";
         size_t string_idx = 0;
         while (string_idx < original.size()) {
@@ -122,7 +125,7 @@ namespace parser {
         this->errors = errors;
     }
 
-    Parser::Parser(const std::string fn, const std::string src, const std::vector<lexer::Token> tokens) {
+    Parser::Parser(const std::string& fn, const std::string& src, const std::vector<lexer::Token> tokens) {
         this->fn = fn;
         this->src = src;
         this->tokens = tokens;
@@ -151,7 +154,7 @@ namespace parser {
         return ParseResult(nullptr, {});
     }
 
-    ParseResult Parser::expect(const lexer::TokenType expected, const std::string error_msg) {
+    ParseResult Parser::expect(const lexer::TokenType expected, const std::string& error_msg) {
         if (tt != expected) {
             return ParseResult(nullptr, {errors::SyntaxError(tc, error_msg)});
         }

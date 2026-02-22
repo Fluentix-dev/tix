@@ -1,3 +1,7 @@
 const module io = get "io";
 
-io.logln("Hello, World!");
+int i = 0;
+while i != 1000000 {
+    i += 1;
+    io.logln("Hello, World!");
+}

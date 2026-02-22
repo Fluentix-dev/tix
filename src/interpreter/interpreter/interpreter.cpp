@@ -81,6 +81,7 @@ namespace interpreter {
         }
         case WhileStmt: {
             std::shared_ptr<parser::WhileStatement> while_ = std::static_pointer_cast<parser::WhileStatement>(stmt);
+            std::shared_ptr<Scope> loop_scope = std::make_shared<Scope>(Scope(scope));
             while (true) {
                 RuntimeResult condition = this->evaluate(scope, while_->condition);
                 if (condition.error != nullptr) {
@@ -96,7 +97,8 @@ namespace interpreter {
                     return RuntimeResult(nullptr, nullptr);
                 }
 
-                RuntimeResult body = this->evaluate(std::make_shared<Scope>(Scope(scope)), while_->body);
+                loop_scope->clear();
+                RuntimeResult body = this->evaluate(loop_scope, while_->body);
                 if (body.error != nullptr) {
                     return body;
                 }
@@ -105,12 +107,13 @@ namespace interpreter {
         case ForV1Stmt: {
             std::shared_ptr<parser::ForV1Statement> for_v1 = std::static_pointer_cast<parser::ForV1Statement>(stmt);
             std::shared_ptr<Scope> child_scope = std::make_shared<Scope>(Scope(scope));
-            
+
             RuntimeResult initialization = this->evaluate(child_scope, for_v1->initialization);
             if (initialization.error != nullptr) {
                 return initialization;
             }
 
+            std::shared_ptr<Scope> loop_scope = std::make_shared<Scope>(Scope(child_scope));
             while (true) {
                 RuntimeResult condition = this->evaluate(child_scope, for_v1->condition);
                 if (condition.error != nullptr) {
@@ -126,7 +129,8 @@ namespace interpreter {
                     return RuntimeResult(nullptr, nullptr);
                 }
 
-                RuntimeResult body = this->evaluate(std::make_shared<Scope>(Scope(child_scope)), for_v1->body);
+                loop_scope->clear();
+                RuntimeResult body = this->evaluate(loop_scope, for_v1->body);
                 if (body.error != nullptr) {
                     return body;
                 }

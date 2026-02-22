@@ -10,7 +10,7 @@
 #define number_dot this->past() == '(' || this->past() == '[' || this->past() == '{' || this->past() == ',' || this->past() == '+' || this->past() == '-' || this->past() == '*' || this->past() == '/'
 
 namespace lexer {
-    Lexer::Lexer(const std::string file_name, const std::string code) {
+    Lexer::Lexer(const std::string& file_name, const std::string& code) {
         this->file_name = file_name;
         this->code = code;
         this->tokens.clear();

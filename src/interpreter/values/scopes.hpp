@@ -12,9 +12,10 @@ namespace interpreter {
 
     struct Scope {
         Scope(const std::shared_ptr<Scope> parent);
-        RuntimeResult declare(const context::Context ctx, const bool constant, const std::string data_type, const std::string var_name, const std::shared_ptr<RuntimeValue> value);
-        RuntimeResult assign(const context::Context ctx, const std::string var_name, const std::shared_ptr<RuntimeValue> value);
-        RuntimeResult get(const context::Context ctx, const std::string var_name);
+        RuntimeResult declare(const context::Context& ctx, const bool constant, const std::string& data_type, const std::string& var_name, const std::shared_ptr<RuntimeValue> value);
+        RuntimeResult assign(const context::Context& ctx, const std::string& var_name, const std::shared_ptr<RuntimeValue> value);
+        RuntimeResult get(const context::Context& ctx, const std::string& var_name) const;
+        void clear();
     private:
         std::shared_ptr<Scope> parent;
         std::unordered_map<std::string, std::shared_ptr<RuntimeValue>> scope;

@@ -19,12 +19,12 @@ namespace interpreter {
         }
     }
 
-    RuntimeResult Scope::declare(const context::Context ctx, const bool constant, const std::string data_type, const std::string var_name, const std::shared_ptr<RuntimeValue> value) {
+    RuntimeResult Scope::declare(const context::Context& ctx, const bool constant, const std::string& data_type, const std::string& var_name, const std::shared_ptr<RuntimeValue> value) {
         if (this->scope.find(var_name) != this->scope.end()) {
             return RuntimeResult(nullptr, std::make_shared<errors::ScopeError>(errors::ScopeError(ctx, "variable '" + var_name + "' is already declared")));
         }
 
-        if (!is(std::make_shared<Scope>(*this), value, data_type)) {
+        if (!is(this, value, data_type)) {
             return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "assignee does not have the data type of '" + data_type + "' that the variable declaration with variable '" + var_name + "' expected")));
         }
 
@@ -35,14 +35,14 @@ namespace interpreter {
         return RuntimeResult(nullptr, nullptr);
     }
 
-    RuntimeResult Scope::assign(const context::Context ctx, const std::string var_name, const std::shared_ptr<RuntimeValue> value) {
+    RuntimeResult Scope::assign(const context::Context& ctx, const std::string& var_name, const std::shared_ptr<RuntimeValue> value) {
         auto it = this->scope.find(var_name);
         if (it != this->scope.end()) {
             if (this->constants[var_name]) {
                 return RuntimeResult(nullptr, std::make_shared<errors::ScopeError>(errors::ScopeError(ctx, "cannot assign to constant variable '" + var_name + "'")));
             }
 
-            if (!is(std::make_shared<Scope>(*this), value, this->scope_type[var_name])) {
+            if (!is(this, value, this->scope_type[var_name])) {
                 return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "assignee does not have the data type of '" + this->scope_type[var_name] + "' that the variable assignment with variable '" + var_name + "' expected")));
             }
 
@@ -58,7 +58,7 @@ namespace interpreter {
         return this->parent->assign(ctx, var_name, value);
     }
 
-    RuntimeResult Scope::get(const context::Context ctx, const std::string var_name) {
+    RuntimeResult Scope::get(const context::Context& ctx, const std::string& var_name) const {
         auto it = this->scope.find(var_name);
         if (it != this->scope.end()) {
             std::shared_ptr<RuntimeValue> returned = it->second;
@@ -72,5 +72,11 @@ namespace interpreter {
         }
 
         return this->parent->get(ctx, var_name);
+    }
+
+    void Scope::clear() {
+        this->scope.clear();
+        this->scope_type.clear();
+        this->constants.clear();
     }
 }

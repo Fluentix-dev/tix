@@ -1,0 +1,3 @@
+const module io = get "io";
+
+io.logln("Hello, World!");

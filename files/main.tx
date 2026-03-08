@@ -1,0 +1,16 @@
+const module io = get "io";
+
+io.logln("START");
+break;
+for int i = 0; i < 100; i++ {
+    if i == 3 {
+        continue;
+    }
+
+    io.logln(i);
+    if i == 5 {
+        break;
+    }
+}
+
+io.logln("DONE");

@@ -1,16 +1,15 @@
 const module io = get "io";
 
-io.logln("START");
-break;
-for int i = 0; i < 100; i++ {
-    if i == 3 {
-        continue;
-    }
+io.logln("Discurso divertido en español
 
-    io.logln(i);
-    if i == 5 {
-        break;
-    }
-}
+Hola a todos,
 
-io.logln("DONE");
+Hoy quiero hablar sobre algo muy importante… la procrastinación. Sí, ese talento especial que muchos de nosotros tenemos. Por ejemplo, cuando tenemos tarea, de repente todo se vuelve interesante. Limpiar la habitación, mirar el techo, contar cuántas baldosas hay en el piso… todo parece urgente menos estudiar.
+
+La tecnología tampoco ayuda mucho. Abres tu teléfono “solo por cinco minutos”, y de repente han pasado dos horas. Ya viste videos de gatos, de recetas que nunca vas a cocinar, y de personas haciendo cosas muy raras en internet.
+
+Pero la procrastinación también tiene un lado positivo. Bajo presión, nuestro cerebro se vuelve increíblemente creativo. Es cuando escribimos un ensayo entero en veinte minutos o estudiamos todo un capítulo justo antes del examen.
+
+Así que, si hoy aprendemos algo, es esto: todos procrastinamos un poco… pero al final, de alguna manera, siempre sobrevivimos.
+
+Muchas gracias… y ahora sí, pueden volver a procrastinar.");

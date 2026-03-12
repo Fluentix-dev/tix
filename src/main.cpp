@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 #include <ctime>
+#include <windows.h>
 
 void debug_expr(std::shared_ptr<parser::Expression> expr) {
     switch (expr->node_type) {
@@ -151,6 +152,8 @@ void debug_stmt(const size_t indentation, std::shared_ptr<parser::Statement> stm
 }
 
 int main(int argc, char* argv[]) {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     // double start = static_cast<double>(std::time(0));
     if (argc == 1) {
         std::cout << "Tix, a programming language made by the Fluentix team\nUse 'tix help' for more commands";

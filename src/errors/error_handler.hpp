@@ -46,5 +46,9 @@ namespace errors {
         LoopError(const context::Context context, const std::string& details);
     };
 
+    struct OverflowError : public Error {
+        OverflowError(const context::Context context, const std::string& details);
+    };
+
     void print_error(const Error error);
 }

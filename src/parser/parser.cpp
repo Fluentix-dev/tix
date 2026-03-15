@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <utility>
+#include <stdexcept>
 
 #define tt this->current_tok.type
 #define tv this->current_tok.value
@@ -787,7 +788,13 @@ namespace parser {
             return expr;
         }
         case Int: {
-            ParseResult returned = ParseResult(std::make_shared<IntExpression>(IntExpression(tc, std::stoll(tv))), {});
+            ParseResult returned = ParseResult(nullptr, {});
+            try {
+                returned = ParseResult(std::make_shared<IntExpression>(IntExpression(tc, std::stoll(tv))), {});
+            } catch (std::out_of_range &e) {
+                returned = ParseResult(nullptr, {errors::OverflowError(tc, "the value given above for integer got overflowed")});
+            }
+
             this->advance();
             return returned;
         }

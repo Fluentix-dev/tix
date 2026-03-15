@@ -678,7 +678,7 @@ namespace interpreter {
                     }))},
                 })), nullptr);
             }
-            
+
             return RuntimeResult(nullptr, std::make_shared<errors::ModuleError>(errors::ModuleError(stmt->ctx, "module '" + get->module_name + "' does not exist")));
         }
         default:

@@ -1,3 +1,10 @@
 const module io = get "io";
 
-io.logln(999999999999999999999);
+string input = io.prompt();
+if input == "0" {
+    io.logln(0);
+} else {
+    while true {
+        io.logln(1);
+    }
+}

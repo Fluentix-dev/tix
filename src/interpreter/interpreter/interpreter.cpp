@@ -679,6 +679,30 @@ namespace interpreter {
                 })), nullptr);
             }
 
+            if (module_name == "cast") {
+                context::Context ctx = get->ctx;
+                return RuntimeResult(std::make_shared<Module>(Module(ctx, {
+                    {"to_int", std::make_shared<BuiltInFunction>(BuiltInFunction(ctx, [scope](context::Context ctx, std::vector<std::shared_ptr<RuntimeValue>> args) {
+                        if (args.size() != 1) {
+                            return RuntimeResult(nullptr, std::make_shared<errors::ArgumentError>(errors::ArgumentError(ctx, "expected 1 argument in 'to_int', got " + std::to_string(args.size()) + "/1")));
+                        }
+
+                        if (args[0]->data_type == "int") {
+                            return RuntimeResult(args[0], nullptr);
+                        }
+
+                        if (args[0]->data_type == "double") {
+                            std::shared_ptr<Double> arg = std::static_pointer_cast<Double>(args[0]);
+                            long long returned = arg->value;
+
+                            return RuntimeResult(std::make_shared<Int>(Int(ctx, returned)), nullptr);
+                        }
+
+                        return RuntimeResult(nullptr, std::make_shared<errors::TypeError>(errors::TypeError(ctx, "cannot convert a '" + args[0]->data_type + "' into an 'int'")));
+                    }))},
+                })), nullptr);
+            }
+
             return RuntimeResult(nullptr, std::make_shared<errors::ModuleError>(errors::ModuleError(stmt->ctx, "module '" + get->module_name + "' does not exist")));
         }
         default:
